@@ -75,9 +75,15 @@ async function processMaterialPipeline(materialId) {
     const chunks = chunkText(text, 3000);
     const { questions, errors } = await generateQuestionsFromChunks(chunks, 5);
 
+    if (errors.length > 0) {
+      console.error(`[materials] ${errors.length} chunk(s) failed for material ${materialId}:`);
+      errors.forEach((e) => console.error(`  chunk ${e.chunkIndex}: ${e.message}`));
+    }
+
     if (questions.length === 0) {
       material.status = 'failed';
-      material.failureReason = 'The AI model did not return any valid questions for this material.';
+      const firstError = errors[0]?.message || 'no error detail returned';
+      material.failureReason = `The AI model did not return any valid questions for this material. (${firstError})`;
       await material.save();
       return;
     }
