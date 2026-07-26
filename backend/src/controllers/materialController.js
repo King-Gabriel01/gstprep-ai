@@ -1,111 +1,138 @@
-const Material = require("../models/Material");
-const Course = require("../models/Course");
-const Question = require("../models/Question");
-const { extractTextFromPdf, chunkText } = require("../utils/textProcessing");
-const { generateQuestionsFromChunks } = require("../utils/aiQuestionGenerator");
+const Material = require('../models/Material');
+const Question = require('../models/Question');
+const Course = require('../models/Course');
+const { extractTextFromPdf, chunkText } = require('../services/pdfService');
+const { generateQuestionsFromChunks } = require('../services/aiService');
 
-async function uploadMaterial(req, res, next) {
+// POST /api/materials/upload  (lecturer) - multipart/form-data, field name "file"
+async function uploadMaterial(req, res) {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No PDF file uploaded" });
+      return res.status(400).json({ message: 'A PDF file is required.' });
     }
-    const { courseId, label } = req.body;
+
+    const { courseId, title } = req.body;
+    if (!courseId) {
+      return res.status(400).json({ message: 'courseId is required.' });
+    }
 
     const course = await Course.findById(courseId);
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    if (String(course.lecturer) !== String(req.user._id)) {
-      return res.status(403).json({ message: "Only the course lecturer can upload materials" });
+    if (!course) return res.status(404).json({ message: 'Course not found.' });
+    if (!course.lecturer.equals(req.user._id)) {
+      return res.status(403).json({ message: 'You can only upload materials to your own courses.' });
     }
 
     const material = await Material.create({
+      title: title || req.file.originalname,
       course: course._id,
       uploadedBy: req.user._id,
-      originalName: req.file.originalname,
+      originalFileName: req.file.originalname,
       storagePath: req.file.path,
-      label: label || "",
-      status: "uploaded",
+      status: 'processing',
     });
 
-    // Extract text synchronously (kept simple; move to a background queue for production scale)
-    try {
-      const text = await extractTextFromPdf(req.file.path);
-      material.extractedText = text;
-      material.charCount = text.length;
-      material.status = "extracted";
-      await material.save();
-    } catch (extractErr) {
-      material.status = "failed";
-      material.errorMessage = `Text extraction failed: ${extractErr.message}`;
-      await material.save();
-      return res.status(422).json({ message: material.errorMessage, material });
-    }
+    // Respond immediately, then process asynchronously so the upload
+    // request doesn't hang while the AI generates questions.
+    res.status(202).json({
+      message: 'Material uploaded. Text extraction and question generation started.',
+      material,
+    });
 
-    res.status(201).json({ material });
+    processMaterialPipeline(material._id).catch((err) => {
+      console.error(`[materials] Pipeline failed for material ${material._id}:`, err.message);
+    });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: 'Upload failed.', error: err.message });
   }
 }
 
-async function listMaterials(req, res, next) {
-  try {
-    const { courseId } = req.params;
-    const materials = await Material.find({ course: courseId }).select("-extractedText");
-    res.json({ materials });
-  } catch (err) {
-    next(err);
-  }
-}
+/**
+ * Background pipeline: extract text -> chunk -> generate questions -> store.
+ * Kept as a named async function (not a queue/worker) to keep the project
+ * deployable without extra infrastructure, while still not blocking the
+ * HTTP response.
+ */
+async function processMaterialPipeline(materialId) {
+  const material = await Material.findById(materialId);
+  if (!material) return;
 
-async function generateQuestionsFromMaterial(req, res, next) {
   try {
-    const material = await Material.findById(req.params.id);
-    if (!material) return res.status(404).json({ message: "Material not found" });
-    if (String(material.uploadedBy) !== String(req.user._id)) {
-      return res.status(403).json({ message: "Not authorized for this material" });
-    }
-    if (!material.extractedText) {
-      return res.status(400).json({ message: "Material has no extracted text yet" });
+    const { text, pageCount, charCount } = await extractTextFromPdf(material.storagePath);
+
+    if (!text || charCount < 200) {
+      material.status = 'failed';
+      material.failureReason = 'Extracted text was too short or empty. The PDF may be a scanned image.';
+      await material.save();
+      return;
     }
 
-    material.status = "processing";
+    material.extractedText = text;
+    material.pageCount = pageCount;
+    material.charCount = charCount;
+    material.status = 'generating';
     await material.save();
 
-    const chunks = chunkText(material.extractedText, 3000);
-    const questionsPerChunk = Number(req.body.questionsPerChunk) || 4;
+    const chunks = chunkText(text, 3000);
+    const { questions, errors } = await generateQuestionsFromChunks(chunks, 5);
 
-    const generated = await generateQuestionsFromChunks(chunks, questionsPerChunk);
-
-    if (generated.length === 0) {
-      material.status = "failed";
-      material.errorMessage = "AI generation returned no valid questions";
+    if (questions.length === 0) {
+      material.status = 'failed';
+      material.failureReason = 'The AI model did not return any valid questions for this material.';
       await material.save();
-      return res.status(422).json({ message: material.errorMessage });
+      return;
     }
 
-    const docs = generated.map((q) => ({
+    const docs = questions.map((q) => ({
       course: material.course,
-      material: material._id,
+      sourceMaterial: material._id,
       questionText: q.questionText,
       options: q.options,
-      correctIndex: q.correctIndex,
+      correctOption: q.correctOption,
       explanation: q.explanation,
-      difficulty: q.difficulty,
-      approvalStatus: "pending",
-      createdBy: "ai",
+      topic: q.topic || 'General',
+      difficulty: q.difficulty || 'medium',
+      bloomLevel: q.bloomLevel || 'understand',
+      approvalStatus: 'pending',
     }));
 
-    const inserted = await Question.insertMany(docs);
+    await Question.insertMany(docs);
 
-    material.status = "generated";
+    material.status = 'ready';
+    material.questionCount = docs.length;
+    if (errors.length > 0) {
+      material.failureReason = `Generated with partial success. ${errors.length} chunk(s) failed.`;
+    }
     await material.save();
-
-    res.status(201).json({
-      message: `${inserted.length} questions generated and awaiting lecturer approval`,
-      questions: inserted,
-    });
   } catch (err) {
-    next(err);
+    material.status = 'failed';
+    material.failureReason = err.message;
+    await material.save();
   }
 }
 
-module.exports = { uploadMaterial, listMaterials, generateQuestionsFromMaterial };
+// GET /api/materials/course/:courseId
+async function listMaterialsForCourse(req, res) {
+  try {
+    const materials = await Material.find({ course: req.params.courseId })
+      .select('-extractedText')
+      .sort({ createdAt: -1 });
+    res.json({ materials });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch materials.', error: err.message });
+  }
+}
+
+// GET /api/materials/:id/status  (lightweight polling endpoint for the UI)
+async function getMaterialStatus(req, res) {
+  try {
+    const material = await Material.findById(req.params.id).select(
+      'status failureReason questionCount title'
+    );
+    if (!material) return res.status(404).json({ message: 'Material not found.' });
+    res.json({ material });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch material status.', error: err.message });
+  }
+}
+
+module.exports = { uploadMaterial, listMaterialsForCourse, getMaterialStatus };

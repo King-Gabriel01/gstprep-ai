@@ -1,7 +1,7 @@
 {
   "name": "gstprep-ai-backend",
   "version": "1.0.0",
-  "description": "GSTPrep AI - Backend API (Node.js + Express + MongoDB)",
+  "description": "GSTPrep AI - AI-powered learning and assessment backend for GST courses",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
@@ -11,18 +11,17 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "mongoose": "^8.5.1",
+    "mongoose": "^8.5.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "pdf-parse": "^1.1.1",
     "dotenv": "^16.4.5",
     "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
     "express-validator": "^7.1.0",
     "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
-    "openai": "^4.55.0"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

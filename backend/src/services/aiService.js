@@ -1,7 +1,8 @@
-const Anthropic = require('@anthropic-ai/sdk');
+// Uses xAI's Grok API, which is OpenAI-compatible, via plain HTTPS calls.
+// No extra SDK dependency needed - Node 18+ has a built-in fetch.
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+const XAI_BASE_URL = process.env.XAI_BASE_URL || 'https://api.x.ai/v1';
+const MODEL = process.env.GROK_MODEL || 'grok-2-latest';
 
 const SYSTEM_PROMPT = `You are an expert academic assessment writer helping a university lecturer create multiple-choice questions (MCQs) for a General Studies (GST) course, from their own uploaded course material.
 
@@ -37,7 +38,7 @@ JSON schema:
 }`;
 
 /**
- * Generates MCQs from a single chunk of course text using Claude.
+ * Generates MCQs from a single chunk of course text using Grok (xAI).
  * @param {string} textChunk - cleaned course material text
  * @param {number} count - approx number of questions to generate for this chunk
  */
@@ -49,19 +50,40 @@ ${textChunk}
 
 Generate ${count} multiple-choice questions from the excerpt above, following the schema and rules exactly. Return only the JSON object.`;
 
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 4000,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
-
-  const textBlock = response.content.find((block) => block.type === 'text');
-  if (!textBlock) {
-    throw new Error('AI response contained no text content.');
+  if (!process.env.XAI_API_KEY) {
+    throw new Error('XAI_API_KEY is not set in the environment.');
   }
 
-  return parseQuestionsJson(textBlock.text);
+  const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`xAI API request failed (${response.status}): ${errBody.slice(0, 300)}`);
+  }
+
+  const data = await response.json();
+  const messageContent = data.choices?.[0]?.message?.content;
+
+  if (!messageContent) {
+    throw new Error('xAI response contained no message content.');
+  }
+
+  return parseQuestionsJson(messageContent);
 }
 
 /**

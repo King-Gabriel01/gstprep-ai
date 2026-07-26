@@ -1,62 +1,80 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
-import { Button, Card, Input } from "../components/ui.jsx";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login, loading } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
+    setError('');
+    setLoading(true);
     try {
-      const user = await login(email, password);
-      navigate(user.role === "lecturer" ? "/lecturer" : "/student");
+      await login(form.email, form.password);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col px-6 py-20">
-      <h1 className="font-display text-2xl font-bold text-ink">Log in</h1>
-      <p className="mt-1.5 text-sm text-slatex">Welcome back to GSTPrep AI.</p>
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="max-w-md mx-auto px-6 pt-16">
+        <h1 className="font-display text-3xl font-semibold">Welcome back</h1>
+        <p className="mt-2 text-ink/60 text-sm">Log in to continue to your dashboard.</p>
 
-      <Card className="mt-8 p-6">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@university.edu.ng"
-            required
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-          />
-          {error && <p className="text-sm text-errorred">{error}</p>}
-          <Button type="submit" disabled={loading} className="mt-2">
-            {loading ? "Signing in…" : "Sign in"}
-          </Button>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <div>
+            <label className="label">Email</label>
+            <input
+              type="email"
+              required
+              className="input-field"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="you@example.edu.ng"
+            />
+          </div>
+          <div>
+            <label className="label">Password</label>
+            <input
+              type="password"
+              required
+              className="input-field"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="••••••••"
+            />
+          </div>
+
+          {error && <p className="text-sm text-clay">{error}</p>}
+
+          <button type="submit" disabled={loading} className="btn-primary w-full">
+            {loading ? 'Logging in…' : 'Log in'}
+          </button>
         </form>
-      </Card>
 
-      <p className="mt-6 text-center text-sm text-slatex">
-        No account yet?{" "}
-        <Link to="/register" className="font-semibold text-moss hover:underline">
-          Register
-        </Link>
-      </p>
+        <p className="mt-6 text-sm text-ink/60">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-moss-700 font-medium">
+            Create one
+          </Link>
+        </p>
+
+        <div className="mt-10 card !bg-moss-50/60">
+          <p className="text-xs font-mono uppercase tracking-wider text-moss-700 mb-2">Demo accounts</p>
+          <p className="text-sm text-ink/70">Lecturer: lecturer@gstprep.demo / password123</p>
+          <p className="text-sm text-ink/70">Student: student@gstprep.demo / password123</p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -131,7 +131,7 @@ function MaterialsTab({ courseId }) {
           {uploading ? 'Uploading…' : 'Upload & generate questions'}
         </button>
         <p className="text-xs text-ink/40">
-          Claude will read this document and draft MCQs automatically. You'll review them in the Questions tab.
+          Grok will read this document and draft MCQs automatically. You'll review them in the Questions tab.
         </p>
       </form>
 

@@ -1,124 +1,89 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import client from "../api/client.js";
-import { Button, Card, EmptyState, Spinner, Badge } from "../components/ui.jsx";
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { courseApi } from '../services/resources';
 
 export default function StudentDashboard() {
-  const [myCourses, setMyCourses] = useState([]);
-  const [allCourses, setAllCourses] = useState([]);
-  const [history, setHistory] = useState(null);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [enrollingId, setEnrollingId] = useState(null);
+  const [code, setCode] = useState('');
+  const [enrolling, setEnrolling] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  async function loadAll() {
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  async function loadCourses() {
     setLoading(true);
     try {
-      const [mine, all, hist] = await Promise.all([
-        client.get("/courses"),
-        client.get("/courses/all"),
-        client.get("/performance/me"),
-      ]);
-      setMyCourses(mine.data.courses);
-      setAllCourses(all.data.courses);
-      setHistory(hist.data);
+      const res = await courseApi.list();
+      setCourses(res.data.courses);
+    } catch (err) {
+      setError('Failed to load courses.');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    loadAll();
-  }, []);
-
-  async function handleEnroll(courseId) {
-    setEnrollingId(courseId);
+  async function handleEnrol(e) {
+    e.preventDefault();
+    setEnrolling(true);
+    setError('');
+    setMessage('');
     try {
-      await client.post(`/courses/${courseId}/enroll`);
-      loadAll();
+      const res = await courseApi.enrol(code.trim());
+      setMessage(res.data.message);
+      setCode('');
+      loadCourses();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Enrolment failed.');
     } finally {
-      setEnrollingId(null);
+      setEnrolling(false);
     }
   }
 
-  const myCourseIds = new Set(myCourses.map((c) => c._id));
-  const browsable = allCourses.filter((c) => !myCourseIds.has(c._id));
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-24">
-        <Spinner />
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="font-display text-2xl font-bold text-ink">Your dashboard</h1>
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <h1 className="font-display text-3xl font-semibold">Your courses</h1>
+      <p className="text-ink/60 text-sm mt-1">Practice questions and track your progress.</p>
 
-      {history && history.attempts > 0 && (
-        <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Card className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slatex">
-              Attempts
-            </p>
-            <p className="mt-1.5 font-display text-2xl font-bold text-ink">{history.attempts}</p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slatex">
-              Average score
-            </p>
-            <p className="mt-1.5 font-display text-2xl font-bold text-ink">
-              {history.avgPercentage}%
-            </p>
-          </Card>
-        </div>
-      )}
-
-      <h2 className="mt-10 font-display text-lg font-semibold text-ink">Your courses</h2>
-      {myCourses.length === 0 ? (
-        <div className="mt-4">
-          <EmptyState
-            title="Not enrolled in any course yet"
-            description="Browse available courses below and enroll to start practicing."
+      <form onSubmit={handleEnrol} className="card mt-6 max-w-md flex items-end gap-3">
+        <div className="flex-1">
+          <label className="label">Have an enrolment code?</label>
+          <input
+            className="input-field uppercase"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="e.g. A1B2C3"
+            maxLength={8}
           />
         </div>
-      ) : (
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {myCourses.map((c) => (
-            <Link key={c._id} to={`/student/courses/${c._id}`}>
-              <Card className="h-full p-5 transition-shadow hover:shadow-md">
-                <p className="font-mono text-xs font-semibold uppercase tracking-widest text-amberflag">
-                  {c.code}
-                </p>
-                <h3 className="mt-2 font-display text-lg font-semibold text-ink">{c.title}</h3>
-                <p className="mt-1 text-sm text-slatex">{c.lecturer?.name}</p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+        <button type="submit" disabled={enrolling || !code} className="btn-primary shrink-0">
+          {enrolling ? 'Joining…' : 'Join'}
+        </button>
+      </form>
+      {message && <p className="mt-2 text-sm text-moss-700">{message}</p>}
+      {error && <p className="mt-2 text-sm text-clay">{error}</p>}
 
-      <h2 className="mt-10 font-display text-lg font-semibold text-ink">Browse courses</h2>
-      {browsable.length === 0 ? (
-        <p className="mt-3 text-sm text-slatex">No other courses available right now.</p>
+      {loading ? (
+        <p className="mt-8 text-ink/50 text-sm font-mono">Loading…</p>
+      ) : courses.length === 0 ? (
+        <div className="mt-10 card text-center py-14">
+          <p className="text-ink/60">You're not enrolled in any courses yet. Ask your lecturer for a code.</p>
+        </div>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {browsable.map((c) => (
-            <Card key={c._id} className="p-5">
-              <p className="font-mono text-xs font-semibold uppercase tracking-widest text-amberflag">
-                {c.code}
-              </p>
-              <h3 className="mt-2 font-display text-lg font-semibold text-ink">{c.title}</h3>
-              {c.description && <p className="mt-1 text-sm text-slatex">{c.description}</p>}
-              <Button
-                variant="accent"
-                className="mt-4 w-full !py-2 text-xs"
-                disabled={enrollingId === c._id}
-                onClick={() => handleEnroll(c._id)}
-              >
-                {enrollingId === c._id ? "Enrolling…" : "Enroll"}
-              </Button>
-            </Card>
+        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {courses.map((c) => (
+            <Link
+              to={`/courses/${c._id}`}
+              key={c._id}
+              className="card hover:border-moss-500/40 hover:shadow-md transition-all"
+            >
+              <span className="pill bg-moss-100 text-moss-700 font-mono text-xs">{c.courseCode}</span>
+              <h3 className="mt-3 font-display text-xl font-semibold">{c.title}</h3>
+              <p className="mt-2 text-sm text-ink/60 line-clamp-2">{c.description || 'No description'}</p>
+            </Link>
           ))}
         </div>
       )}

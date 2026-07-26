@@ -1,122 +1,121 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import client from "../api/client.js";
-import { Button, Card, Input, EmptyState, Spinner } from "../components/ui.jsx";
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { courseApi } from '../services/resources';
 
 export default function LecturerDashboard() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", code: "", description: "" });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  async function loadCourses() {
-    setLoading(true);
-    try {
-      const { data } = await client.get("/courses");
-      setCourses(data.courses);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [form, setForm] = useState({ title: '', courseCode: '', description: '' });
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadCourses();
   }, []);
 
+  async function loadCourses() {
+    setLoading(true);
+    try {
+      const res = await courseApi.list();
+      setCourses(res.data.courses);
+    } catch (err) {
+      setError('Failed to load courses.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleCreate(e) {
     e.preventDefault();
-    setSaving(true);
-    setError("");
+    setCreating(true);
+    setError('');
     try {
-      await client.post("/courses", form);
-      setForm({ title: "", code: "", description: "" });
+      await courseApi.create(form);
+      setForm({ title: '', courseCode: '', description: '' });
       setShowForm(false);
       loadCourses();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not create course");
+      setError(err.response?.data?.message || 'Failed to create course.');
     } finally {
-      setSaving(false);
+      setCreating(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Your courses</h1>
-          <p className="mt-1 text-sm text-slatex">
-            Upload materials, review AI-generated questions, and track class performance.
-          </p>
+          <h1 className="font-display text-3xl font-semibold">Your courses</h1>
+          <p className="text-ink/60 text-sm mt-1">Manage materials, questions, and student performance.</p>
         </div>
-        <Button onClick={() => setShowForm((s) => !s)}>
-          {showForm ? "Cancel" : "New course"}
-        </Button>
+        <button onClick={() => setShowForm((s) => !s)} className="btn-primary">
+          {showForm ? 'Cancel' : '+ New course'}
+        </button>
       </div>
 
       {showForm && (
-        <Card className="mt-6 p-6">
-          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Input
-              label="Course title"
+        <form onSubmit={handleCreate} className="card mt-6 space-y-4 max-w-lg">
+          <div>
+            <label className="label">Course title</label>
+            <input
+              required
+              className="input-field"
               value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Communication in English"
-              required
             />
-            <Input
-              label="Course code"
-              value={form.code}
-              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
-              placeholder="GST 101"
+          </div>
+          <div>
+            <label className="label">Course code</label>
+            <input
               required
+              className="input-field"
+              value={form.courseCode}
+              onChange={(e) => setForm({ ...form, courseCode: e.target.value })}
+              placeholder="GST101"
             />
-            <Input
-              label="Description (optional)"
+          </div>
+          <div>
+            <label className="label">Description (optional)</label>
+            <textarea
+              className="input-field"
+              rows={3}
               value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="First-year compulsory course"
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
-            <div className="md:col-span-3">
-              {error && <p className="mb-3 text-sm text-errorred">{error}</p>}
-              <Button type="submit" variant="accent" disabled={saving}>
-                {saving ? "Creating…" : "Create course"}
-              </Button>
-            </div>
-          </form>
-        </Card>
+          </div>
+          {error && <p className="text-sm text-clay">{error}</p>}
+          <button type="submit" disabled={creating} className="btn-primary">
+            {creating ? 'Creating…' : 'Create course'}
+          </button>
+        </form>
       )}
 
-      <div className="mt-8">
-        {loading ? (
-          <div className="flex justify-center py-16 text-slatex">
-            <Spinner />
-          </div>
-        ) : courses.length === 0 ? (
-          <EmptyState
-            title="No courses yet"
-            description="Create your first course to start uploading materials and generating practice questions."
-            action={<Button onClick={() => setShowForm(true)}>New course</Button>}
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {courses.map((c) => (
-              <Link key={c._id} to={`/lecturer/courses/${c._id}`}>
-                <Card className="h-full p-5 transition-shadow hover:shadow-md">
-                  <p className="font-mono text-xs font-semibold uppercase tracking-widest text-amberflag">
-                    {c.code}
-                  </p>
-                  <h3 className="mt-2 font-display text-lg font-semibold text-ink">{c.title}</h3>
-                  <p className="mt-1 text-sm text-slatex">
-                    {c.students?.length || 0} student{c.students?.length === 1 ? "" : "s"} enrolled
-                  </p>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <p className="mt-8 text-ink/50 text-sm font-mono">Loading…</p>
+      ) : courses.length === 0 ? (
+        <div className="mt-10 card text-center py-14">
+          <p className="text-ink/60">You haven't created any courses yet.</p>
+        </div>
+      ) : (
+        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {courses.map((c) => (
+            <Link
+              to={`/courses/${c._id}`}
+              key={c._id}
+              className="card hover:border-moss-500/40 hover:shadow-md transition-all"
+            >
+              <span className="pill bg-moss-100 text-moss-700 font-mono text-xs">{c.courseCode}</span>
+              <h3 className="mt-3 font-display text-xl font-semibold">{c.title}</h3>
+              <p className="mt-2 text-sm text-ink/60 line-clamp-2">{c.description || 'No description'}</p>
+              <p className="mt-4 text-xs font-mono text-ink/40">
+                {c.enrolledStudents?.length || 0} enrolled · code {c.enrolmentCode}
+              </p>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

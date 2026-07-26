@@ -1,87 +1,108 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Button, Card } from "../components/ui.jsx";
+import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
-const modules = [
+const steps = [
   {
-    tag: "01 · Upload",
-    title: "Course materials in, structured practice out",
-    body: "Lecturers upload lecture notes and past questions as PDFs. GSTPrep AI extracts and chunks the text automatically.",
+    n: '01',
+    title: 'Lecturer uploads course material',
+    body: 'A PDF of lecture notes, a textbook chapter, or a course outline — whatever already exists.',
   },
   {
-    tag: "02 · Generate",
-    title: "AI-authored questions, human-approved",
-    body: "The system drafts multiple-choice questions with explanations. Nothing reaches students until a lecturer approves it.",
+    n: '02',
+    title: 'Claude reads and drafts questions',
+    body: 'The material is chunked and read carefully, and multiple-choice questions are drafted with distractors, explanations, and difficulty tags.',
   },
   {
-    tag: "03 · Practice",
-    title: "Unlimited retrieval practice",
-    body: "Students test themselves anytime, get instant scores, and read explanations for every question they missed.",
+    n: '03',
+    title: 'Lecturer reviews and approves',
+    body: 'Nothing reaches a student unreviewed. Edit, approve, or reject each question before it enters the bank.',
   },
   {
-    tag: "04 · Track",
-    title: "Analytics for both sides",
-    body: "Students see their progress over time. Lecturers see which questions the whole class keeps missing.",
+    n: '04',
+    title: 'Students practice and track progress',
+    body: 'Timed practice sets, instant feedback, and a personal breakdown of strong and weak topics.',
   },
 ];
 
 export default function Landing() {
   return (
-    <div>
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-16 md:pt-24">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-amberflag">
-          For GST courses in Nigerian tertiary institutions
-        </p>
-        <h1 className="mt-5 max-w-3xl font-display text-4xl font-bold leading-[1.1] text-ink md:text-6xl">
-          Turn a lecture PDF into a practice test before the class ends.
-        </h1>
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-slatex">
-          GSTPrep AI reads what lecturers already have, generates approved multiple-choice
-          questions, and gives students a reason to study GST content all semester, not just the
-          week before exams.
-        </p>
-        <div className="mt-8 flex gap-4">
-          <Link to="/register">
-            <Button className="!px-6 !py-3 text-sm">Create an account</Button>
-          </Link>
-          <Link to="/login">
-            <Button variant="ghost" className="!px-6 !py-3 text-sm">
+    <div className="min-h-screen">
+      <Navbar />
+
+      <section className="max-w-6xl mx-auto px-6 pt-20 pb-24">
+        <div className="max-w-3xl">
+          <p className="font-mono text-xs tracking-widest text-moss-700 uppercase mb-6">
+            For Nigerian tertiary institutions · GST courses
+          </p>
+          <h1 className="font-display text-5xl sm:text-6xl leading-[1.05] font-semibold tracking-tight">
+            Turn your course notes into a{' '}
+            <span className="italic text-moss-700">practice test</span>, automatically.
+          </h1>
+          <p className="mt-6 text-lg text-ink/70 leading-relaxed max-w-xl">
+            GSTPrep AI reads the material lecturers already have and drafts multiple-choice
+            questions from it — reviewed by the lecturer, practiced by the student, tracked
+            over time.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <Link to="/register" className="btn-primary">
+              Create your account
+            </Link>
+            <Link to="/login" className="btn-secondary">
               I already have one
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      <section className="border-t border-ink/10 bg-white/50">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-px bg-ink/10 md:grid-cols-2">
-          {modules.map((m) => (
-            <div key={m.tag} className="bg-parchment p-8 md:p-10">
-              <p className="font-mono text-xs uppercase tracking-widest text-moss">{m.tag}</p>
-              <h3 className="mt-3 font-display text-xl font-semibold text-ink">{m.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slatex">{m.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <Card className="flex flex-col items-start gap-4 p-8 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h3 className="font-display text-xl font-semibold text-ink">
-              Lecturer or student — pick a role when you register.
-            </h3>
-            <p className="mt-1 text-sm text-slatex">
-              Each role gets a purpose-built dashboard. You can register as many courses as you
-              need.
-            </p>
+            </Link>
           </div>
-          <Link to="/register">
-            <Button variant="accent" className="!px-6 !py-3 text-sm whitespace-nowrap">
-              Register now
-            </Button>
-          </Link>
-        </Card>
+        </div>
       </section>
+
+      <section className="border-y border-ink/10 bg-ink text-paper">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <p className="font-mono text-xs tracking-widest text-paper/50 uppercase mb-10">
+            How it works
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
+            {steps.map((s) => (
+              <div key={s.n} className="border-t border-paper/20 pt-5">
+                <span className="font-display text-3xl text-clay">{s.n}</span>
+                <h3 className="mt-3 font-semibold text-paper">{s.title}</h3>
+                <p className="mt-2 text-sm text-paper/60 leading-relaxed">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-8">
+        <div className="card">
+          <h3 className="font-display text-2xl font-semibold">For lecturers</h3>
+          <p className="mt-3 text-ink/70 leading-relaxed">
+            Stop writing MCQs from scratch every semester. Upload what you already teach from,
+            review the AI's draft, and publish a question bank in minutes rather than days.
+          </p>
+          <ul className="mt-5 space-y-2 text-sm text-ink/70">
+            <li>— Full approval workflow before students see anything</li>
+            <li>— Class-wide analytics: weak topics, most-missed questions</li>
+            <li>— Schedule formal timed assessments from your approved bank</li>
+          </ul>
+        </div>
+        <div className="card">
+          <h3 className="font-display text-2xl font-semibold">For students</h3>
+          <p className="mt-3 text-ink/70 leading-relaxed">
+            Practice with questions drawn directly from your own course material, not generic
+            test banks. Get instant explanations and see exactly which topics need more work.
+          </p>
+          <ul className="mt-5 space-y-2 text-sm text-ink/70">
+            <li>— Unlimited practice sessions, instantly scored</li>
+            <li>— Personal topic-by-topic accuracy breakdown</li>
+            <li>— Enrol in any course with a single code</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer className="border-t border-ink/10 py-8">
+        <div className="max-w-6xl mx-auto px-6 text-xs text-ink/40 font-mono">
+          GSTPrep AI — Final year project, Department of Computer Science
+        </div>
+      </footer>
     </div>
   );
 }

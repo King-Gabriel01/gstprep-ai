@@ -1,44 +1,55 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import client from "../api/client";
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authApi } from '../services/resources';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const raw = localStorage.getItem("gstprep_user");
-    return raw ? JSON.parse(raw) : null;
-  });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = useCallback(async (email, password) => {
-    setLoading(true);
-    try {
-      const { data } = await client.post("/auth/login", { email, password });
-      localStorage.setItem("gstprep_token", data.token);
-      localStorage.setItem("gstprep_user", JSON.stringify(data.user));
-      setUser(data.user);
-      return data.user;
-    } finally {
+  useEffect(() => {
+    const token = localStorage.getItem('gstprep_token');
+    const cachedUser = localStorage.getItem('gstprep_user');
+
+    if (token && cachedUser) {
+      setUser(JSON.parse(cachedUser));
+      // Verify the token is still valid in the background
+      authApi
+        .me()
+        .then((res) => {
+          setUser(res.data.user);
+          localStorage.setItem('gstprep_user', JSON.stringify(res.data.user));
+        })
+        .catch(() => {
+          localStorage.removeItem('gstprep_token');
+          localStorage.removeItem('gstprep_user');
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
       setLoading(false);
     }
   }, []);
 
-  const register = useCallback(async (name, email, password, role) => {
-    setLoading(true);
-    try {
-      const { data } = await client.post("/auth/register", { name, email, password, role });
-      localStorage.setItem("gstprep_token", data.token);
-      localStorage.setItem("gstprep_user", JSON.stringify(data.user));
-      setUser(data.user);
-      return data.user;
-    } finally {
-      setLoading(false);
-    }
+  const login = useCallback(async (email, password) => {
+    const res = await authApi.login({ email, password });
+    localStorage.setItem('gstprep_token', res.data.token);
+    localStorage.setItem('gstprep_user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+    return res.data.user;
+  }, []);
+
+  const register = useCallback(async (payload) => {
+    const res = await authApi.register(payload);
+    localStorage.setItem('gstprep_token', res.data.token);
+    localStorage.setItem('gstprep_user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+    return res.data.user;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("gstprep_token");
-    localStorage.removeItem("gstprep_user");
+    localStorage.removeItem('gstprep_token');
+    localStorage.removeItem('gstprep_user');
     setUser(null);
   }, []);
 
@@ -51,6 +62,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }

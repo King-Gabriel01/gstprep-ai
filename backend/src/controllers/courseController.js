@@ -1,75 +1,96 @@
-const Course = require("../models/Course");
-const User = require("../models/User");
+const Course = require('../models/Course');
+const User = require('../models/User');
 
-async function createCourse(req, res, next) {
+// POST /api/courses  (lecturer)
+async function createCourse(req, res) {
   try {
-    const { title, code, description } = req.body;
-    if (!title || !code) {
-      return res.status(400).json({ message: "title and code are required" });
+    const { title, courseCode, description } = req.body;
+
+    if (!title || !courseCode) {
+      return res.status(400).json({ message: 'Course title and course code are required.' });
     }
 
     const course = await Course.create({
       title,
-      code: code.toUpperCase(),
+      courseCode,
       description,
       lecturer: req.user._id,
     });
 
     res.status(201).json({ course });
   } catch (err) {
-    next(err);
+    if (err.code === 11000) {
+      return res.status(409).json({ message: 'You already have a course with this code.' });
+    }
+    res.status(500).json({ message: 'Failed to create course.', error: err.message });
   }
 }
 
-async function listCourses(req, res, next) {
+// GET /api/courses  (role-aware: lecturer sees their own, student sees enrolled)
+async function listCourses(req, res) {
   try {
-    let query = {};
-    if (req.user.role === "lecturer") {
-      query.lecturer = req.user._id;
-    } else if (req.user.role === "student") {
-      query.students = req.user._id;
+    let courses;
+    if (req.user.role === 'lecturer') {
+      courses = await Course.find({ lecturer: req.user._id }).sort({ createdAt: -1 });
+    } else if (req.user.role === 'student') {
+      courses = await Course.find({ enrolledStudents: req.user._id }).sort({ createdAt: -1 });
+    } else {
+      courses = await Course.find().sort({ createdAt: -1 });
     }
-    const courses = await Course.find(query).populate("lecturer", "name email");
     res.json({ courses });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: 'Failed to fetch courses.', error: err.message });
   }
 }
 
-async function listAllCoursesPublic(req, res, next) {
+// GET /api/courses/:id
+async function getCourse(req, res) {
   try {
-    const courses = await Course.find().select("title code description lecturer");
-    res.json({ courses });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function enrollInCourse(req, res, next) {
-  try {
-    const course = await Course.findById(req.params.id);
-    if (!course) return res.status(404).json({ message: "Course not found" });
-
-    if (!course.students.includes(req.user._id)) {
-      course.students.push(req.user._id);
-      await course.save();
-    }
-    await User.findByIdAndUpdate(req.user._id, { $addToSet: { courses: course._id } });
-
-    res.json({ message: "Enrolled successfully", course });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function getCourse(req, res, next) {
-  try {
-    const course = await Course.findById(req.params.id).populate("lecturer", "name email");
-    if (!course) return res.status(404).json({ message: "Course not found" });
+    const course = await Course.findById(req.params.id).populate('lecturer', 'name email');
+    if (!course) return res.status(404).json({ message: 'Course not found.' });
     res.json({ course });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: 'Failed to fetch course.', error: err.message });
   }
 }
 
-module.exports = { createCourse, listCourses, listAllCoursesPublic, enrollInCourse, getCourse };
+// GET /api/courses/discover  (student browsing courses to join)
+async function discoverCourses(req, res) {
+  try {
+    const courses = await Course.find({ isActive: true })
+      .populate('lecturer', 'name')
+      .select('title courseCode description lecturer enrolmentCode enrolledStudents')
+      .sort({ createdAt: -1 });
+    res.json({ courses });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch courses.', error: err.message });
+  }
+}
+
+// POST /api/courses/enrol  (student, via enrolment code)
+async function enrolInCourse(req, res) {
+  try {
+    const { enrolmentCode } = req.body;
+    if (!enrolmentCode) {
+      return res.status(400).json({ message: 'Enrolment code is required.' });
+    }
+
+    const course = await Course.findOne({ enrolmentCode: enrolmentCode.toUpperCase() });
+    if (!course) return res.status(404).json({ message: 'No course found with that enrolment code.' });
+
+    if (course.enrolledStudents.some((id) => id.equals(req.user._id))) {
+      return res.status(409).json({ message: 'You are already enrolled in this course.' });
+    }
+
+    course.enrolledStudents.push(req.user._id);
+    await course.save();
+
+    await User.findByIdAndUpdate(req.user._id, { $addToSet: { courses: course._id } });
+
+    res.json({ message: `Enrolled in ${course.title}.`, course });
+  } catch (err) {
+    res.status(500).json({ message: 'Enrolment failed.', error: err.message });
+  }
+}
+
+module.exports = { createCourse, listCourses, getCourse, discoverCourses, enrolInCourse };

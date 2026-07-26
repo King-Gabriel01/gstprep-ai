@@ -1,22 +1,56 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const materialSchema = new mongoose.Schema(
   {
-    course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    originalName: { type: String, required: true },
-    storagePath: { type: String, required: true },
-    label: { type: String, default: "" },
-    extractedText: { type: String, default: "" },
-    charCount: { type: Number, default: 0 },
+    title: {
+      type: String,
+      required: [true, 'Material title/label is required'],
+      trim: true,
+    },
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course',
+      required: true,
+    },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    originalFileName: {
+      type: String,
+      required: true,
+    },
+    storagePath: {
+      type: String,
+      required: true,
+    },
+    extractedText: {
+      type: String,
+      default: '',
+    },
+    pageCount: {
+      type: Number,
+      default: 0,
+    },
+    charCount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
-      enum: ["uploaded", "extracted", "processing", "generated", "failed"],
-      default: "uploaded",
+      enum: ['processing', 'extracted', 'generating', 'ready', 'failed'],
+      default: 'processing',
     },
-    errorMessage: { type: String, default: "" },
+    failureReason: {
+      type: String,
+    },
+    questionCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Material", materialSchema);
+module.exports = mongoose.model('Material', materialSchema);

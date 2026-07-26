@@ -1,18 +1,18 @@
-const express = require("express");
-const { protect, requireRole } = require("../middleware/auth");
-const upload = require("../middleware/upload");
+const express = require('express');
 const {
   uploadMaterial,
-  listMaterials,
-  generateQuestionsFromMaterial,
-} = require("../controllers/materialController");
+  listMaterialsForCourse,
+  getMaterialStatus,
+} = require('../controllers/materialController');
+const { protect, requireRole } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post("/upload", requireRole("lecturer"), upload.single("file"), uploadMaterial);
-router.get("/course/:courseId", listMaterials);
-router.post("/:id/generate-questions", requireRole("lecturer"), generateQuestionsFromMaterial);
+router.post('/upload', requireRole('lecturer'), upload.single('file'), uploadMaterial);
+router.get('/course/:courseId', listMaterialsForCourse);
+router.get('/:id/status', getMaterialStatus);
 
 module.exports = router;

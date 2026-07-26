@@ -1,21 +1,21 @@
-const express = require("express");
-const { protect, requireRole } = require("../middleware/auth");
+const express = require('express');
 const {
   createCourse,
   listCourses,
-  listAllCoursesPublic,
-  enrollInCourse,
   getCourse,
-} = require("../controllers/courseController");
+  discoverCourses,
+  enrolInCourse,
+} = require('../controllers/courseController');
+const { protect, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post("/", requireRole("lecturer"), createCourse);
-router.get("/", listCourses);
-router.get("/all", listAllCoursesPublic);
-router.get("/:id", getCourse);
-router.post("/:id/enroll", requireRole("student"), enrollInCourse);
+router.post('/', requireRole('lecturer'), createCourse);
+router.get('/', listCourses);
+router.get('/discover', discoverCourses);
+router.post('/enrol', requireRole('student'), enrolInCourse);
+router.get('/:id', getCourse);
 
 module.exports = router;

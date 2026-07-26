@@ -1,7 +1,5 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
-import { Button } from "./ui.jsx";
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -9,42 +7,36 @@ export default function Navbar() {
 
   function handleLogout() {
     logout();
-    navigate("/login");
+    navigate('/');
   }
 
   return (
-    <header className="border-b border-ink/10 bg-parchment/95 backdrop-blur sticky top-0 z-10">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-baseline gap-2">
-          <span className="font-display text-xl font-bold text-ink">GSTPrep</span>
-          <span className="font-mono text-xs font-semibold text-amberflag">AI</span>
+    <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2">
+          <span className="font-display text-xl font-semibold tracking-tight">
+            GSTPrep<span className="text-clay">.</span>AI
+          </span>
         </Link>
 
         {user ? (
-          <nav className="flex items-center gap-6">
-            <Link
-              to={user.role === "lecturer" ? "/lecturer" : "/student"}
-              className="text-sm font-medium text-slatex hover:text-ink"
-            >
-              Dashboard
-            </Link>
-            <span className="text-sm text-slatex">
-              {user.name} <span className="text-ink/40">·</span>{" "}
-              <span className="font-mono text-xs uppercase text-amberflag">{user.role}</span>
+          <div className="flex items-center gap-4">
+            <span className="hidden sm:inline text-sm text-ink/60 font-mono">
+              {user.name.split(' ')[0]} · {user.role}
             </span>
-            <Button variant="ghost" onClick={handleLogout} className="!py-1.5 !px-3 text-xs">
-              Sign out
-            </Button>
-          </nav>
+            <button onClick={handleLogout} className="btn-secondary !py-2 !px-4 text-xs">
+              Log out
+            </button>
+          </div>
         ) : (
-          <nav className="flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-slatex hover:text-ink">
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="text-sm font-medium text-ink/70 hover:text-ink">
               Log in
             </Link>
-            <Link to="/register">
-              <Button className="!py-2 !px-4 text-xs">Get started</Button>
+            <Link to="/register" className="btn-primary !py-2 !px-4 text-xs">
+              Get started
             </Link>
-          </nav>
+          </div>
         )}
       </div>
     </header>

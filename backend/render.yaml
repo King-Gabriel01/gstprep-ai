@@ -17,10 +17,12 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
-      - key: ANTHROPIC_API_KEY
+      - key: XAI_API_KEY
         sync: false
-      - key: CLAUDE_MODEL
-        value: claude-sonnet-4-6
+      - key: GROK_MODEL
+        value: grok-2-latest
+      - key: XAI_BASE_URL
+        value: https://api.x.ai/v1
       - key: CLIENT_URL
         sync: false
       - key: MAX_UPLOAD_MB
