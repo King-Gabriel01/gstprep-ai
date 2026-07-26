@@ -29,11 +29,21 @@ export default function Landing() {
     <div className="min-h-screen">
       <Navbar />
 
-      <section className="relative max-w-6xl mx-auto px-6 pt-20 pb-24 overflow-hidden">
-        {/* Ambient glow, subtle signature element */}
+      <section className="relative max-w-6xl mx-auto px-6 pt-20 pb-28 lg:pb-36 overflow-hidden">
+        {/* Layered ambient glows - approximating the glossy floating-shape feeling without literal 3D renders */}
         <div
-          className="pointer-events-none absolute -top-32 right-0 w-[32rem] h-[32rem] rounded-full opacity-[0.15] blur-[100px]"
+          className="pointer-events-none absolute -top-24 right-[-4rem] w-[30rem] h-[30rem] rounded-full opacity-[0.18] blur-[90px]"
           style={{ background: 'radial-gradient(circle, #4A9B7F 0%, transparent 70%)' }}
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute top-40 right-24 w-72 h-72 rounded-full opacity-[0.14] blur-[80px]"
+          style={{ background: 'radial-gradient(circle, #D9A441 0%, transparent 70%)' }}
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute top-10 left-1/2 w-64 h-64 rounded-full opacity-[0.1] blur-[70px]"
+          style={{ background: 'radial-gradient(circle, #C1622D 0%, transparent 70%)' }}
           aria-hidden="true"
         />
 
@@ -41,9 +51,10 @@ export default function Landing() {
           <p className="font-mono text-xs tracking-widest text-moss-400 uppercase mb-6">
             For Nigerian tertiary institutions · GST courses
           </p>
-          <h1 className="font-display text-5xl sm:text-6xl leading-[1.05] font-semibold tracking-tight text-paper">
-            Turn your course notes into a{' '}
-            <span className="italic text-moss-400">practice test</span>, automatically.
+          <h1 className="font-display text-5xl sm:text-6xl leading-[1.05] tracking-tight text-paper">
+            <span className="font-normal">Turn your course notes</span>{' '}
+            <span className="font-semibold italic text-moss-400">into a practice test</span>
+            <span className="font-normal">, automatically.</span>
           </h1>
           <p className="mt-6 text-lg text-paper/70 leading-relaxed max-w-xl">
             GSTPrep AI reads the material lecturers already have and drafts multiple-choice
@@ -57,6 +68,35 @@ export default function Landing() {
             <Link to="/login" className="btn-secondary">
               I already have one
             </Link>
+          </div>
+        </div>
+
+        {/* Floating "live" cards - borrowed from the overlapping pill-card motif, reworked as product moments */}
+        <div
+          className="hidden lg:block absolute top-8 right-4 card !p-3 w-52 animate-fade-slide-up shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)]"
+          style={{ animationDelay: '250ms' }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-moss-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-moss-400" />
+            </span>
+            <p className="text-xs font-mono text-muted uppercase tracking-wider">Just now</p>
+          </div>
+          <p className="mt-2 text-sm text-paper/90">
+            <span className="font-semibold text-moss-400">18 questions</span> drafted from{' '}
+            <span className="font-mono text-xs text-paper/60">GST101 Handouts.pdf</span>
+          </p>
+        </div>
+
+        <div
+          className="hidden lg:block absolute top-52 right-20 card !p-3 w-48 animate-fade-slide-up shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)]"
+          style={{ animationDelay: '400ms' }}
+        >
+          <p className="text-xs font-mono text-muted uppercase tracking-wider">Practice result</p>
+          <div className="mt-2 flex items-center justify-between">
+            <p className="text-2xl font-display font-semibold text-gold">86%</p>
+            <span className="pill bg-gold/10 text-gold border border-gold/25 text-[10px]">9/10 correct</span>
           </div>
         </div>
       </section>
