@@ -35,7 +35,7 @@ export default function Navbar() {
             <Link to="/login" className="text-sm font-medium text-paper/70 hover:text-paper transition-colors duration-150">
               Log in
             </Link>
-            <Link to="/register" className="btn-primary !py-2 !px-4 text-xs">
+            <Link to="/register" className="btn-primary btn-ripple !py-2 !px-4 text-xs">
               Get started
             </Link>
           </div>
