@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { courseApi, materialApi, questionApi, assessmentApi, analyticsApi } from '../services/resources';
 import ScoreBadge from '../components/ScoreBadge';
+import { Spinner, DotPulse, LoadingScreen } from '../components/Spinner';
 
 const TABS = ['Materials', 'Questions', 'Assessments', 'Analytics'];
 
@@ -12,23 +13,25 @@ export default function LecturerCourseView({ courseId }) {
     courseApi.get(courseId).then((res) => setCourse(res.data.course));
   }, [courseId]);
 
-  if (!course) return <div className="max-w-6xl mx-auto px-6 py-10 text-ink/50 text-sm font-mono">Loading…</div>;
+  if (!course) return <LoadingScreen label="Loading course" />;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <p className="pill bg-moss-100 text-moss-700 font-mono text-xs w-fit">{course.courseCode}</p>
-      <h1 className="mt-3 font-display text-3xl font-semibold">{course.title}</h1>
-      <p className="mt-1 text-sm text-ink/50 font-mono">
-        Enrolment code: <span className="font-semibold text-ink/70">{course.enrolmentCode}</span> · share this with students
+    <div className="max-w-6xl mx-auto px-6 py-10 animate-fade-slide-up">
+      <p className="pill bg-moss-500/10 text-moss-400 border border-moss-500/25 font-mono text-xs w-fit">
+        {course.courseCode}
+      </p>
+      <h1 className="mt-3 font-display text-3xl font-semibold text-paper">{course.title}</h1>
+      <p className="mt-1 text-sm text-muted font-mono">
+        Enrolment code: <span className="font-semibold text-paper/80">{course.enrolmentCode}</span> · share this with students
       </p>
 
-      <div className="mt-8 flex gap-1 border-b border-ink/10">
+      <div className="mt-8 flex gap-1 border-b border-ink-border">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              tab === t ? 'border-moss-700 text-moss-700' : 'border-transparent text-ink/50 hover:text-ink/80'
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-200 ease-smooth ${
+              tab === t ? 'border-moss-400 text-moss-400' : 'border-transparent text-muted hover:text-paper/80'
             }`}
           >
             {t}
@@ -92,29 +95,29 @@ function MaterialsTab({ courseId }) {
   }
 
   const statusStyles = {
-    processing: 'bg-gold/15 text-gold',
-    generating: 'bg-gold/15 text-gold',
-    ready: 'bg-moss-100 text-moss-700',
-    failed: 'bg-clay/10 text-clay',
+    processing: 'bg-gold/10 text-gold border border-gold/25',
+    generating: 'bg-gold/10 text-gold border border-gold/25',
+    ready: 'bg-moss-500/10 text-moss-400 border border-moss-500/25',
+    failed: 'bg-clay/10 text-clay border border-clay/25',
   };
 
   const statusLabel = {
-    processing: 'Extracting text…',
-    generating: 'Generating questions…',
+    processing: 'Extracting text',
+    generating: 'Generating questions',
     ready: 'Ready',
     failed: 'Failed',
   };
 
   return (
     <div>
-      <form onSubmit={handleUpload} className="card max-w-xl space-y-4">
+      <form onSubmit={handleUpload} className="card max-w-xl space-y-4 animate-fade-slide-up">
         <div>
           <label className="label">Course material (PDF only)</label>
           <input
             type="file"
             accept="application/pdf"
             onChange={(e) => setFile(e.target.files[0])}
-            className="input-field !py-2"
+            className="input-field !py-2 file:mr-3 file:rounded-full file:border-0 file:bg-moss-500/15 file:text-moss-300 file:px-3 file:py-1.5 file:text-xs file:font-medium file:cursor-pointer hover:file:bg-moss-500/25 file:transition-colors"
           />
         </div>
         <div>
@@ -126,22 +129,36 @@ function MaterialsTab({ courseId }) {
             placeholder="e.g. Week 3 - Comprehension Skills"
           />
         </div>
-        {error && <p className="text-sm text-clay">{error}</p>}
+        {error && (
+          <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
+            {error}
+          </p>
+        )}
         <button type="submit" disabled={!file || uploading} className="btn-primary">
-          {uploading ? 'Uploading…' : 'Upload & generate questions'}
+          {uploading ? (
+            <>
+              <Spinner /> Uploading…
+            </>
+          ) : (
+            'Upload & generate questions'
+          )}
         </button>
-        <p className="text-xs text-ink/40">
+        <p className="text-xs text-muted">
           Gemini will read this document and draft MCQs automatically. You'll review them in the Questions tab.
         </p>
       </form>
 
       <div className="mt-8 space-y-3">
-        {materials.length === 0 && <p className="text-sm text-ink/50">No materials uploaded yet.</p>}
-        {materials.map((m) => (
-          <div key={m._id} className="card !py-4 flex items-center justify-between gap-4">
+        {materials.length === 0 && <p className="text-sm text-muted">No materials uploaded yet.</p>}
+        {materials.map((m, i) => (
+          <div
+            key={m._id}
+            className="card !py-4 flex items-center justify-between gap-4 card-hover animate-fade-slide-up"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
             <div>
-              <p className="font-medium">{m.title}</p>
-              <p className="text-xs text-ink/40 font-mono mt-0.5">
+              <p className="font-medium text-paper">{m.title}</p>
+              <p className="text-xs text-muted font-mono mt-0.5">
                 {m.originalFileName} {m.pageCount ? `· ${m.pageCount}p` : ''}
               </p>
               {m.status === 'failed' && m.failureReason && (
@@ -150,9 +167,12 @@ function MaterialsTab({ courseId }) {
             </div>
             <div className="flex items-center gap-3 shrink-0">
               {m.status === 'ready' && (
-                <span className="text-xs font-mono text-ink/50">{m.questionCount} questions</span>
+                <span className="text-xs font-mono text-muted">{m.questionCount} questions</span>
               )}
-              <span className={`pill ${statusStyles[m.status]}`}>{statusLabel[m.status]}</span>
+              <span className={`pill ${statusStyles[m.status]}`}>
+                {['processing', 'generating'].includes(m.status) && <DotPulse />}
+                {statusLabel[m.status]}
+              </span>
             </div>
           </div>
         ))}
@@ -234,8 +254,10 @@ function QuestionsTab({ courseId }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`pill capitalize border ${
-                filter === f ? 'bg-ink text-paper border-ink' : 'border-ink/15 text-ink/60'
+              className={`pill capitalize border transition-all duration-200 ease-smooth ${
+                filter === f
+                  ? 'bg-paper text-ink border-paper'
+                  : 'border-ink-border text-muted hover:border-paper/25'
               }`}
             >
               {f}
@@ -244,33 +266,37 @@ function QuestionsTab({ courseId }) {
         </div>
         {filter === 'pending' && questions.length > 0 && (
           <button onClick={handleApproveAll} disabled={busy} className="btn-secondary !py-1.5 !px-3 text-xs">
-            Approve all pending
+            {busy ? <Spinner /> : 'Approve all pending'}
           </button>
         )}
       </div>
 
       <div className="mt-6 space-y-4">
-        {questions.length === 0 && <p className="text-sm text-ink/50">No {filter} questions.</p>}
+        {questions.length === 0 && <p className="text-sm text-muted">No {filter} questions.</p>}
 
-        {questions.map((q) => (
-          <div key={q._id} className="card">
+        {questions.map((q, i) => (
+          <div
+            key={q._id}
+            className="card animate-fade-slide-up"
+            style={{ animationDelay: `${i * 40}ms` }}
+          >
             {editingId === q._id ? (
-              <div className="space-y-3">
+              <div className="space-y-3 animate-fade-in">
                 <textarea
                   className="input-field"
                   rows={2}
                   value={editDraft.questionText}
                   onChange={(e) => setEditDraft({ ...editDraft, questionText: e.target.value })}
                 />
-                {editDraft.options.map((opt, i) => (
+                {editDraft.options.map((opt, i2) => (
                   <div key={opt.label} className="flex items-center gap-2">
-                    <span className="font-mono text-xs w-5">{opt.label}</span>
+                    <span className="font-mono text-xs w-5 text-muted">{opt.label}</span>
                     <input
                       className="input-field"
                       value={opt.text}
                       onChange={(e) => {
                         const opts = [...editDraft.options];
-                        opts[i] = { ...opt, text: e.target.value };
+                        opts[i2] = { ...opt, text: e.target.value };
                         setEditDraft({ ...editDraft, options: opts });
                       }}
                     />
@@ -299,7 +325,7 @@ function QuestionsTab({ courseId }) {
                 />
                 <div className="flex gap-2">
                   <button onClick={saveEdit} disabled={busy} className="btn-primary !py-1.5 !px-4 text-xs">
-                    Save
+                    {busy ? <Spinner /> : 'Save'}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
@@ -312,17 +338,17 @@ function QuestionsTab({ courseId }) {
             ) : (
               <>
                 <div className="flex items-start justify-between gap-4">
-                  <p className="font-medium">{q.questionText}</p>
-                  <span className="pill bg-ink/5 text-ink/60 shrink-0 text-xs">{q.topic}</span>
+                  <p className="font-medium text-paper">{q.questionText}</p>
+                  <span className="pill bg-paper/5 text-muted border border-ink-border shrink-0 text-xs">{q.topic}</span>
                 </div>
                 <div className="mt-3 grid sm:grid-cols-2 gap-2">
                   {q.options.map((opt) => (
                     <div
                       key={opt.label}
-                      className={`text-sm rounded-lg px-3 py-2 border ${
+                      className={`text-sm rounded-lg px-3 py-2 border transition-colors duration-200 ${
                         opt.label === q.correctOption
-                          ? 'border-moss-500 bg-moss-50 text-moss-700'
-                          : 'border-ink/10 text-ink/70'
+                          ? 'border-moss-500 bg-moss-500/10 text-moss-300'
+                          : 'border-ink-border text-paper/65'
                       }`}
                     >
                       <span className="font-mono mr-2">{opt.label}</span>
@@ -330,7 +356,7 @@ function QuestionsTab({ courseId }) {
                     </div>
                   ))}
                 </div>
-                <p className="mt-3 text-sm text-ink/50 italic">{q.explanation}</p>
+                <p className="mt-3 text-sm text-muted italic">{q.explanation}</p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {q.approvalStatus !== 'approved' && (
@@ -417,7 +443,7 @@ function AssessmentsTab({ courseId }) {
       </button>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="card mt-5 max-w-lg space-y-4">
+        <form onSubmit={handleCreate} className="card mt-5 max-w-lg space-y-4 animate-fade-slide-up">
           <div>
             <label className="label">Title</label>
             <input
@@ -474,29 +500,43 @@ function AssessmentsTab({ courseId }) {
               />
             </div>
           </div>
-          {error && <p className="text-sm text-clay">{error}</p>}
+          {error && (
+            <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
+              {error}
+            </p>
+          )}
           <button type="submit" disabled={creating} className="btn-primary">
-            {creating ? 'Creating…' : 'Create assessment'}
+            {creating ? (
+              <>
+                <Spinner /> Creating…
+              </>
+            ) : (
+              'Create assessment'
+            )}
           </button>
-          <p className="text-xs text-ink/40">
+          <p className="text-xs text-muted">
             Only approved questions are used. You need at least as many approved questions as requested.
           </p>
         </form>
       )}
 
       <div className="mt-8 space-y-3">
-        {assessments.length === 0 && <p className="text-sm text-ink/50">No assessments yet.</p>}
-        {assessments.map((a) => (
-          <div key={a._id} className="card !py-4 flex items-center justify-between gap-4">
+        {assessments.length === 0 && <p className="text-sm text-muted">No assessments yet.</p>}
+        {assessments.map((a, i) => (
+          <div
+            key={a._id}
+            className="card !py-4 flex items-center justify-between gap-4 card-hover animate-fade-slide-up"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
             <div>
-              <p className="font-medium">{a.title}</p>
-              <p className="text-xs text-ink/40 font-mono mt-0.5">
+              <p className="font-medium text-paper">{a.title}</p>
+              <p className="text-xs text-muted font-mono mt-0.5">
                 {a.numberOfQuestions} questions · {a.durationMinutes} min ·{' '}
                 {new Date(a.availableFrom).toLocaleString()} → {new Date(a.availableUntil).toLocaleString()}
               </p>
             </div>
             {a.isPublished ? (
-              <span className="pill bg-moss-100 text-moss-700 shrink-0">Published</span>
+              <span className="pill bg-moss-500/10 text-moss-400 border border-moss-500/25 shrink-0">Published</span>
             ) : (
               <button onClick={() => handlePublish(a._id)} className="btn-secondary !py-1.5 !px-4 text-xs shrink-0">
                 Publish
@@ -517,39 +557,39 @@ function AnalyticsTab({ courseId }) {
     analyticsApi.lecturer(courseId).then((res) => setData(res.data));
   }, [courseId]);
 
-  if (!data) return <p className="text-sm text-ink/50 font-mono">Loading…</p>;
+  if (!data) return <LoadingScreen label="Loading analytics" />;
 
   return (
     <div className="space-y-8">
       <div className="grid sm:grid-cols-3 gap-4">
-        <div className="card text-center">
-          <p className="font-display text-3xl font-semibold">{data.classAverage}%</p>
-          <p className="text-xs text-ink/50 mt-1">Class average</p>
+        <div className="card text-center animate-fade-slide-up">
+          <p className="font-display text-3xl font-semibold text-paper">{data.classAverage}%</p>
+          <p className="text-xs text-muted mt-1">Class average</p>
         </div>
-        <div className="card text-center">
-          <p className="font-display text-3xl font-semibold">
+        <div className="card text-center animate-fade-slide-up" style={{ animationDelay: '60ms' }}>
+          <p className="font-display text-3xl font-semibold text-paper">
             {data.activeStudentCount}/{data.enrolledCount}
           </p>
-          <p className="text-xs text-ink/50 mt-1">Active students</p>
+          <p className="text-xs text-muted mt-1">Active students</p>
         </div>
-        <div className="card text-center">
-          <p className="font-display text-3xl font-semibold">{data.totalAttempts}</p>
-          <p className="text-xs text-ink/50 mt-1">Total attempts</p>
+        <div className="card text-center animate-fade-slide-up" style={{ animationDelay: '120ms' }}>
+          <p className="font-display text-3xl font-semibold text-paper">{data.totalAttempts}</p>
+          <p className="text-xs text-muted mt-1">Total attempts</p>
         </div>
       </div>
 
       <div>
-        <h3 className="font-display text-xl font-semibold mb-3">Topic difficulty (class-wide)</h3>
+        <h3 className="font-display text-xl font-semibold mb-3 text-paper">Topic difficulty (class-wide)</h3>
         {data.classTopicBreakdown.length === 0 ? (
-          <p className="text-sm text-ink/50">No attempts recorded yet.</p>
+          <p className="text-sm text-muted">No attempts recorded yet.</p>
         ) : (
           <div className="space-y-2">
-            {data.classTopicBreakdown.map((t) => (
-              <div key={t.topic} className="flex items-center gap-3">
-                <span className="text-sm w-40 truncate">{t.topic}</span>
-                <div className="flex-1 h-2 rounded-full bg-ink/10 overflow-hidden">
+            {data.classTopicBreakdown.map((t, i) => (
+              <div key={t.topic} className="flex items-center gap-3 animate-fade-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
+                <span className="text-sm w-40 truncate text-paper/80">{t.topic}</span>
+                <div className="flex-1 h-2 rounded-full bg-ink-border overflow-hidden">
                   <div
-                    className="h-full bg-moss-500"
+                    className="h-full bg-moss-500 transition-all duration-700 ease-smooth"
                     style={{ width: `${t.accuracyPercent}%` }}
                   />
                 </div>
@@ -561,15 +601,19 @@ function AnalyticsTab({ courseId }) {
       </div>
 
       <div>
-        <h3 className="font-display text-xl font-semibold mb-3">Most-missed questions</h3>
+        <h3 className="font-display text-xl font-semibold mb-3 text-paper">Most-missed questions</h3>
         {data.mostMissedQuestions.length === 0 ? (
-          <p className="text-sm text-ink/50">Not enough attempts yet.</p>
+          <p className="text-sm text-muted">Not enough attempts yet.</p>
         ) : (
           <div className="space-y-2">
-            {data.mostMissedQuestions.map((q) => (
-              <div key={q.questionId} className="card !py-3 flex items-center justify-between gap-4">
-                <p className="text-sm">{q.questionText}</p>
-                <span className="pill bg-clay/10 text-clay shrink-0">{q.missRate}% miss</span>
+            {data.mostMissedQuestions.map((q, i) => (
+              <div
+                key={q.questionId}
+                className="card !py-3 flex items-center justify-between gap-4 card-hover animate-fade-slide-up"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <p className="text-sm text-paper/85">{q.questionText}</p>
+                <span className="pill bg-clay/10 text-clay border border-clay/25 shrink-0">{q.missRate}% miss</span>
               </div>
             ))}
           </div>
@@ -577,15 +621,25 @@ function AnalyticsTab({ courseId }) {
       </div>
 
       <div>
-        <h3 className="font-display text-xl font-semibold mb-3">Student activity</h3>
+        <h3 className="font-display text-xl font-semibold mb-3 text-paper">Student activity</h3>
         <div className="space-y-2">
-          {data.studentActivity.map((s) => (
-            <div key={s.studentId} className="card !py-3 flex items-center justify-between">
+          {data.studentActivity.map((s, i) => (
+            <div
+              key={s.studentId}
+              className="card !py-3 flex items-center justify-between card-hover animate-fade-slide-up"
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
               <div>
-                <p className="text-sm font-medium">{s.name}</p>
-                <p className="text-xs text-ink/40">{s.email}</p>
+                <p className="text-sm font-medium text-paper">{s.name}</p>
+                <p className="text-xs text-muted">{s.email}</p>
               </div>
-              <span className={`pill ${s.hasActivity ? 'bg-moss-100 text-moss-700' : 'bg-ink/5 text-ink/40'}`}>
+              <span
+                className={`pill border ${
+                  s.hasActivity
+                    ? 'bg-moss-500/10 text-moss-400 border-moss-500/25'
+                    : 'bg-paper/5 text-muted border-ink-border'
+                }`}
+              >
                 {s.hasActivity ? 'Active' : 'No activity'}
               </span>
             </div>

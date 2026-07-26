@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
@@ -38,9 +39,9 @@ export default function Register() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-md mx-auto px-6 pt-16 pb-16">
-        <h1 className="font-display text-3xl font-semibold">Create your account</h1>
-        <p className="mt-2 text-ink/60 text-sm">Set up your GSTPrep AI profile.</p>
+      <div className="max-w-md mx-auto px-6 pt-16 pb-16 animate-fade-slide-up">
+        <h1 className="font-display text-3xl font-semibold text-paper">Create your account</h1>
+        <p className="mt-2 text-muted text-sm">Set up your GSTPrep AI profile.</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
@@ -51,10 +52,10 @@ export default function Register() {
                   type="button"
                   key={role}
                   onClick={() => update('role', role)}
-                  className={`rounded-lg border px-4 py-2.5 text-sm font-medium capitalize transition-colors ${
+                  className={`rounded-lg border px-4 py-2.5 text-sm font-medium capitalize transition-all duration-200 ease-smooth ${
                     form.role === role
-                      ? 'border-moss-600 bg-moss-50 text-moss-700'
-                      : 'border-ink/15 text-ink/60 hover:border-ink/30'
+                      ? 'border-moss-500 bg-moss-500/10 text-moss-400'
+                      : 'border-ink-border text-muted hover:border-paper/25'
                   }`}
                 >
                   {role}
@@ -100,7 +101,7 @@ export default function Register() {
           </div>
 
           {form.role === 'student' && (
-            <div>
+            <div className="animate-fade-in">
               <label className="label">Matric number (optional)</label>
               <input
                 className="input-field"
@@ -121,16 +122,26 @@ export default function Register() {
             />
           </div>
 
-          {error && <p className="text-sm text-clay">{error}</p>}
+          {error && (
+            <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
+              {error}
+            </p>
+          )}
 
           <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Creating account…' : 'Create account'}
+            {loading ? (
+              <>
+                <Spinner /> Creating account…
+              </>
+            ) : (
+              'Create account'
+            )}
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-ink/60">
+        <p className="mt-6 text-sm text-muted">
           Already have an account?{' '}
-          <Link to="/login" className="text-moss-700 font-medium">
+          <Link to="/login" className="link-underline font-medium">
             Log in
           </Link>
         </p>

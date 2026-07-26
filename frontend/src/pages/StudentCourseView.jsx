@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { courseApi, practiceApi, assessmentApi, analyticsApi } from '../services/resources';
 import ScoreBadge from '../components/ScoreBadge';
 import PracticeSession from '../components/PracticeSession';
+import { Spinner, LoadingScreen } from '../components/Spinner';
 
 const TABS = ['Practice', 'Assessments', 'My progress'];
 
@@ -13,20 +14,22 @@ export default function StudentCourseView({ courseId }) {
     courseApi.get(courseId).then((res) => setCourse(res.data.course));
   }, [courseId]);
 
-  if (!course) return <div className="max-w-6xl mx-auto px-6 py-10 text-ink/50 text-sm font-mono">Loading…</div>;
+  if (!course) return <LoadingScreen label="Loading course" />;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <p className="pill bg-moss-100 text-moss-700 font-mono text-xs w-fit">{course.courseCode}</p>
-      <h1 className="mt-3 font-display text-3xl font-semibold">{course.title}</h1>
+    <div className="max-w-6xl mx-auto px-6 py-10 animate-fade-slide-up">
+      <p className="pill bg-moss-500/10 text-moss-400 border border-moss-500/25 font-mono text-xs w-fit">
+        {course.courseCode}
+      </p>
+      <h1 className="mt-3 font-display text-3xl font-semibold text-paper">{course.title}</h1>
 
-      <div className="mt-8 flex gap-1 border-b border-ink/10">
+      <div className="mt-8 flex gap-1 border-b border-ink-border">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              tab === t ? 'border-moss-700 text-moss-700' : 'border-transparent text-ink/50 hover:text-ink/80'
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-200 ease-smooth ${
+              tab === t ? 'border-moss-400 text-moss-400' : 'border-transparent text-muted hover:text-paper/80'
             }`}
           >
             {t}
@@ -90,8 +93,8 @@ function PracticeTab({ courseId }) {
 
   return (
     <div>
-      <div className="card max-w-md">
-        <h3 className="font-display text-xl font-semibold">Start a practice session</h3>
+      <div className="card max-w-md animate-fade-slide-up">
+        <h3 className="font-display text-xl font-semibold text-paper">Start a practice session</h3>
         <div className="mt-4">
           <label className="label">Number of questions</label>
           <select
@@ -106,23 +109,37 @@ function PracticeTab({ courseId }) {
             ))}
           </select>
         </div>
-        {error && <p className="mt-3 text-sm text-clay">{error}</p>}
+        {error && (
+          <p className="mt-3 text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
+            {error}
+          </p>
+        )}
         <button onClick={handleStart} disabled={starting} className="btn-primary mt-5 w-full">
-          {starting ? 'Loading…' : 'Start practice'}
+          {starting ? (
+            <>
+              <Spinner /> Loading…
+            </>
+          ) : (
+            'Start practice'
+          )}
         </button>
       </div>
 
       <div className="mt-8">
-        <h3 className="font-display text-xl font-semibold mb-3">Recent attempts</h3>
+        <h3 className="font-display text-xl font-semibold mb-3 text-paper">Recent attempts</h3>
         {history.length === 0 ? (
-          <p className="text-sm text-ink/50">No attempts yet.</p>
+          <p className="text-sm text-muted">No attempts yet.</p>
         ) : (
           <div className="space-y-2">
-            {history.map((r) => (
-              <div key={r._id} className="card !py-3 flex items-center justify-between">
+            {history.map((r, i) => (
+              <div
+                key={r._id}
+                className="card !py-3 flex items-center justify-between card-hover animate-fade-slide-up"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
                 <div>
-                  <p className="text-sm">{new Date(r.submittedAt).toLocaleString()}</p>
-                  <p className="text-xs text-ink/40">
+                  <p className="text-sm text-paper/85">{new Date(r.submittedAt).toLocaleString()}</p>
+                  <p className="text-xs text-muted">
                     {r.correctCount}/{r.totalQuestions} correct · {r.timeTakenSeconds}s
                   </p>
                 </div>
@@ -177,20 +194,28 @@ function AssessmentsTab({ courseId }) {
 
   return (
     <div>
-      {error && <p className="mb-4 text-sm text-clay">{error}</p>}
+      {error && (
+        <p className="mb-4 text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
+          {error}
+        </p>
+      )}
       {assessments.length === 0 ? (
-        <p className="text-sm text-ink/50">No assessments have been scheduled yet.</p>
+        <p className="text-sm text-muted">No assessments have been scheduled yet.</p>
       ) : (
         <div className="space-y-3">
-          {assessments.map((a) => {
+          {assessments.map((a, i) => {
             const opens = new Date(a.availableFrom);
             const closes = new Date(a.availableUntil);
             const open = now >= opens && now <= closes;
             return (
-              <div key={a._id} className="card !py-4 flex items-center justify-between gap-4">
+              <div
+                key={a._id}
+                className="card !py-4 flex items-center justify-between gap-4 card-hover animate-fade-slide-up"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
                 <div>
-                  <p className="font-medium">{a.title}</p>
-                  <p className="text-xs text-ink/40 font-mono mt-0.5">
+                  <p className="font-medium text-paper">{a.title}</p>
+                  <p className="text-xs text-muted font-mono mt-0.5">
                     {a.numberOfQuestions} questions · {a.durationMinutes} min · {opens.toLocaleString()} → {closes.toLocaleString()}
                   </p>
                 </div>
@@ -218,37 +243,40 @@ function ProgressTab({ courseId }) {
     analyticsApi.student(courseId).then((res) => setData(res.data));
   }, [courseId]);
 
-  if (!data) return <p className="text-sm text-ink/50 font-mono">Loading…</p>;
+  if (!data) return <LoadingScreen label="Loading progress" />;
 
   if (data.attemptCount === 0) {
-    return <p className="text-sm text-ink/50">Complete a practice session to see your progress here.</p>;
+    return <p className="text-sm text-muted">Complete a practice session to see your progress here.</p>;
   }
 
   return (
     <div className="space-y-8">
       <div className="grid sm:grid-cols-3 gap-4">
-        <div className="card text-center">
-          <p className="font-display text-3xl font-semibold">{data.averageScore}%</p>
-          <p className="text-xs text-ink/50 mt-1">Average score</p>
+        <div className="card text-center animate-fade-slide-up">
+          <p className="font-display text-3xl font-semibold text-paper">{data.averageScore}%</p>
+          <p className="text-xs text-muted mt-1">Average score</p>
         </div>
-        <div className="card text-center">
-          <p className="font-display text-3xl font-semibold">{data.bestScore}%</p>
-          <p className="text-xs text-ink/50 mt-1">Best score</p>
+        <div className="card text-center animate-fade-slide-up" style={{ animationDelay: '60ms' }}>
+          <p className="font-display text-3xl font-semibold text-paper">{data.bestScore}%</p>
+          <p className="text-xs text-muted mt-1">Best score</p>
         </div>
-        <div className="card text-center">
-          <p className="font-display text-3xl font-semibold">{data.attemptCount}</p>
-          <p className="text-xs text-ink/50 mt-1">Attempts</p>
+        <div className="card text-center animate-fade-slide-up" style={{ animationDelay: '120ms' }}>
+          <p className="font-display text-3xl font-semibold text-paper">{data.attemptCount}</p>
+          <p className="text-xs text-muted mt-1">Attempts</p>
         </div>
       </div>
 
       <div>
-        <h3 className="font-display text-xl font-semibold mb-3">Topic breakdown</h3>
+        <h3 className="font-display text-xl font-semibold mb-3 text-paper">Topic breakdown</h3>
         <div className="space-y-2">
-          {data.topicBreakdown.map((t) => (
-            <div key={t.topic} className="flex items-center gap-3">
-              <span className="text-sm w-40 truncate">{t.topic}</span>
-              <div className="flex-1 h-2 rounded-full bg-ink/10 overflow-hidden">
-                <div className="h-full bg-moss-500" style={{ width: `${t.accuracyPercent}%` }} />
+          {data.topicBreakdown.map((t, i) => (
+            <div key={t.topic} className="flex items-center gap-3 animate-fade-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
+              <span className="text-sm w-40 truncate text-paper/80">{t.topic}</span>
+              <div className="flex-1 h-2 rounded-full bg-ink-border overflow-hidden">
+                <div
+                  className="h-full bg-moss-500 transition-all duration-700 ease-smooth"
+                  style={{ width: `${t.accuracyPercent}%` }}
+                />
               </div>
               <ScoreBadge score={t.accuracyPercent} />
             </div>
@@ -257,13 +285,17 @@ function ProgressTab({ courseId }) {
       </div>
 
       <div>
-        <h3 className="font-display text-xl font-semibold mb-3">Score trend</h3>
+        <h3 className="font-display text-xl font-semibold mb-3 text-paper">Score trend</h3>
         <div className="space-y-2">
           {data.scoreTrend.map((s, i) => (
-            <div key={i} className="card !py-3 flex items-center justify-between">
-              <p className="text-sm">
+            <div
+              key={i}
+              className="card !py-3 flex items-center justify-between card-hover animate-fade-slide-up"
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              <p className="text-sm text-paper/85">
                 {new Date(s.date).toLocaleDateString()}{' '}
-                <span className="text-xs text-ink/40 font-mono ml-1">{s.mode}</span>
+                <span className="text-xs text-muted font-mono ml-1">{s.mode}</span>
               </p>
               <ScoreBadge score={s.score} />
             </div>

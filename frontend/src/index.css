@@ -7,37 +7,128 @@ html {
 }
 
 body {
-  background-color: #F7F5F0;
+  background-color: #0B0F0D;
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(20,35,31,0.06) 1px, transparent 0);
-  background-size: 22px 22px;
+    radial-gradient(circle at 1px 1px, rgba(232, 230, 222, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+  color: #E8E6DE;
 }
 
 ::selection {
-  background-color: #C99A3D;
-  color: #14231F;
+  background-color: #D9A441;
+  color: #0B0F0D;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0F0D;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A342E;
+  border-radius: 999px;
+  border: 2px solid #0B0F0D;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3A7D66;
+}
+
+:focus-visible {
+  outline: 2px solid #4A9B7F;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-moss-700 text-paper px-5 py-2.5 font-medium text-sm tracking-wide hover:bg-moss-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-moss-500 text-ink px-5 py-2.5 font-semibold text-sm tracking-wide
+      transition-all duration-200 ease-smooth
+      hover:bg-moss-400 hover:shadow-[0_0_0_1px_rgba(74,155,127,0.4),0_8px_24px_-8px_rgba(74,155,127,0.5)]
+      active:scale-[0.98]
+      disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-moss-500;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink/20 text-ink px-5 py-2.5 font-medium text-sm tracking-wide hover:border-ink/40 hover:bg-ink/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-border text-paper px-5 py-2.5 font-medium text-sm tracking-wide
+      transition-all duration-200 ease-smooth
+      hover:border-paper/30 hover:bg-paper/5
+      active:scale-[0.98]
+      disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-clay/40 text-clay px-4 py-2 font-medium text-sm hover:bg-clay/10 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-clay/40 text-clay px-4 py-2 font-medium text-sm
+      transition-all duration-200 ease-smooth
+      hover:bg-clay/10 hover:border-clay/60
+      active:scale-[0.98];
   }
   .card {
-    @apply bg-white/70 border border-ink/10 rounded-2xl p-6 shadow-sm;
+    @apply bg-ink-raised border border-ink-border rounded-2xl p-6 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]
+      transition-colors duration-200;
+  }
+  .card-hover {
+    @apply hover:border-moss-600/50 transition-all duration-200 ease-smooth;
   }
   .input-field {
-    @apply w-full rounded-lg border border-ink/15 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-moss-500/40 focus:border-moss-500;
+    @apply w-full rounded-lg border border-ink-border bg-ink px-4 py-2.5 text-sm text-paper placeholder:text-muted/60
+      transition-all duration-150
+      focus:outline-none focus:ring-2 focus:ring-moss-500/40 focus:border-moss-500;
   }
   .label {
-    @apply block text-xs font-medium uppercase tracking-wider text-ink/60 mb-1.5;
+    @apply block text-xs font-medium uppercase tracking-wider text-muted mb-1.5;
   }
   .pill {
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium;
   }
+  .link-underline {
+    @apply relative text-moss-400 hover:text-moss-300 transition-colors duration-150
+      after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-moss-400
+      after:transition-all after:duration-200 after:ease-smooth hover:after:w-full;
+  }
 }
+
+@layer utilities {
+  .animate-enter {
+    animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* Custom loading spinner - a slow-filling ring, like a page turning */
+.spinner {
+  --size: 20px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  border: 2.5px solid rgba(232, 230, 222, 0.12);
+  border-top-color: #4A9B7F;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner-lg {
+  --size: 36px;
+  border-width: 3px;
+}
+
+/* Dot-pulse loader for inline "thinking" states */
+.dot-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.dot-pulse span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulseGlow 1.2s ease-in-out infinite;
+}
+.dot-pulse span:nth-child(2) { animation-delay: 0.15s; }
+.dot-pulse span:nth-child(3) { animation-delay: 0.3s; }

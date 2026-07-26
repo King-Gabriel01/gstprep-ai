@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
@@ -27,9 +28,9 @@ export default function Login() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-md mx-auto px-6 pt-16">
-        <h1 className="font-display text-3xl font-semibold">Welcome back</h1>
-        <p className="mt-2 text-ink/60 text-sm">Log in to continue to your dashboard.</p>
+      <div className="max-w-md mx-auto px-6 pt-16 animate-fade-slide-up">
+        <h1 className="font-display text-3xl font-semibold text-paper">Welcome back</h1>
+        <p className="mt-2 text-muted text-sm">Log in to continue to your dashboard.</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
@@ -55,24 +56,34 @@ export default function Login() {
             />
           </div>
 
-          {error && <p className="text-sm text-clay">{error}</p>}
+          {error && (
+            <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
+              {error}
+            </p>
+          )}
 
           <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Logging in…' : 'Log in'}
+            {loading ? (
+              <>
+                <Spinner /> Logging in…
+              </>
+            ) : (
+              'Log in'
+            )}
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-ink/60">
+        <p className="mt-6 text-sm text-muted">
           Don't have an account?{' '}
-          <Link to="/register" className="text-moss-700 font-medium">
+          <Link to="/register" className="link-underline font-medium">
             Create one
           </Link>
         </p>
 
-        <div className="mt-10 card !bg-moss-50/60">
-          <p className="text-xs font-mono uppercase tracking-wider text-moss-700 mb-2">Demo accounts</p>
-          <p className="text-sm text-ink/70">Lecturer: lecturer@gstprep.demo / password123</p>
-          <p className="text-sm text-ink/70">Student: student@gstprep.demo / password123</p>
+        <div className="mt-10 card !bg-moss-500/5 !border-moss-500/20">
+          <p className="text-xs font-mono uppercase tracking-wider text-moss-400 mb-2">Demo accounts</p>
+          <p className="text-sm text-paper/70">Lecturer: lecturer@gstprep.demo / password123</p>
+          <p className="text-sm text-paper/70">Student: student@gstprep.demo / password123</p>
         </div>
       </div>
     </div>
