@@ -96,23 +96,51 @@ Generate ${count} multiple-choice questions from the excerpt above, following th
 /**
  * Generates questions across multiple text chunks, aggregating and
  * de-duplicating the results, per the chunking strategy in the design doc.
+ *
+ * Gemini's free tier has a per-minute request limit, so chunks are processed
+ * sequentially with a delay, and a single retry-with-backoff on 429 responses.
  */
 async function generateQuestionsFromChunks(chunks, questionsPerChunk = 5) {
   const allQuestions = [];
   const errors = [];
+  const DELAY_MS = Number(process.env.GEMINI_REQUEST_DELAY_MS || 4000);
 
   for (let i = 0; i < chunks.length; i += 1) {
     try {
-      const { questions } = await generateQuestionsFromChunk(chunks[i], questionsPerChunk);
+      const { questions } = await generateWithRetry(chunks[i], questionsPerChunk);
       allQuestions.push(...questions);
     } catch (err) {
       errors.push({ chunkIndex: i, message: err.message });
+    }
+
+    if (i < chunks.length - 1) {
+      await sleep(DELAY_MS);
     }
   }
 
   const deduped = dedupeQuestions(allQuestions);
 
   return { questions: deduped, errors };
+}
+
+async function generateWithRetry(chunk, count, attempt = 1) {
+  try {
+    return await generateQuestionsFromChunk(chunk, count);
+  } catch (err) {
+    const isRateLimit = err.message.includes('429');
+    if (isRateLimit && attempt < 3) {
+      const backoffMs = 15000 * attempt;
+      await sleep(backoffMs);
+      return generateWithRetry(chunk, count, attempt + 1);
+    }
+    throw err;
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function parseQuestionsJson(rawText) {

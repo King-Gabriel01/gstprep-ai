@@ -73,7 +73,14 @@ async function processMaterialPipeline(materialId) {
     await material.save();
 
     const chunks = chunkText(text, 3000);
-    const { questions, errors } = await generateQuestionsFromChunks(chunks, 5);
+    const MAX_CHUNKS = Number(process.env.MAX_AI_CHUNKS || 12);
+    const limitedChunks = chunks.slice(0, MAX_CHUNKS);
+    if (chunks.length > MAX_CHUNKS) {
+      console.log(
+        `[materials] Material ${materialId} has ${chunks.length} chunks; processing first ${MAX_CHUNKS} to stay within free-tier limits.`
+      );
+    }
+    const { questions, errors } = await generateQuestionsFromChunks(limitedChunks, 5);
 
     if (errors.length > 0) {
       console.error(`[materials] ${errors.length} chunk(s) failed for material ${materialId}:`);
