@@ -1,8 +1,8 @@
-// Uses xAI's Grok API, which is OpenAI-compatible, via plain HTTPS calls.
+// Uses Google Gemini API (free tier) via plain HTTPS calls.
 // No extra SDK dependency needed - Node 18+ has a built-in fetch.
 
-const XAI_BASE_URL = process.env.XAI_BASE_URL || 'https://api.x.ai/v1';
-const MODEL = process.env.GROK_MODEL || 'grok-2-latest';
+const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
 const SYSTEM_PROMPT = `You are an expert academic assessment writer helping a university lecturer create multiple-choice questions (MCQs) for a General Studies (GST) course, from their own uploaded course material.
 
@@ -38,7 +38,7 @@ JSON schema:
 }`;
 
 /**
- * Generates MCQs from a single chunk of course text using Grok (xAI).
+ * Generates MCQs from a single chunk of course text using Google Gemini.
  * @param {string} textChunk - cleaned course material text
  * @param {number} count - approx number of questions to generate for this chunk
  */
@@ -50,37 +50,44 @@ ${textChunk}
 
 Generate ${count} multiple-choice questions from the excerpt above, following the schema and rules exactly. Return only the JSON object.`;
 
-  if (!process.env.XAI_API_KEY) {
-    throw new Error('XAI_API_KEY is not set in the environment.');
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set in the environment.');
   }
 
-  const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
+  const url = `${GEMINI_BASE_URL}/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: userPrompt }],
+        },
       ],
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
+      generationConfig: {
+        temperature: 0.4,
+        responseMimeType: 'application/json',
+      },
     }),
   });
 
   if (!response.ok) {
     const errBody = await response.text().catch(() => '');
-    throw new Error(`xAI API request failed (${response.status}): ${errBody.slice(0, 300)}`);
+    throw new Error(`Gemini API request failed (${response.status}): ${errBody.slice(0, 300)}`);
   }
 
   const data = await response.json();
-  const messageContent = data.choices?.[0]?.message?.content;
+  const messageContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!messageContent) {
-    throw new Error('xAI response contained no message content.');
+    throw new Error('Gemini response contained no message content.');
   }
 
   return parseQuestionsJson(messageContent);

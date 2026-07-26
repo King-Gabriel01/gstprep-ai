@@ -17,12 +17,12 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
-      - key: XAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
-      - key: GROK_MODEL
-        value: grok-2-latest
-      - key: XAI_BASE_URL
-        value: https://api.x.ai/v1
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta
       - key: CLIENT_URL
         sync: false
       - key: MAX_UPLOAD_MB

@@ -2,7 +2,7 @@
 
 An AI-powered MCQ generation and practice-testing platform for General Studies (GST) courses
 at Nigerian tertiary institutions. Lecturers upload their existing course material (PDF);
-Grok reads it and drafts multiple-choice questions; the lecturer reviews and approves them;
+Gemini reads it and drafts multiple-choice questions; the lecturer reviews and approves them;
 students practice against the approved bank and get instant feedback, topic-level analytics,
 and can sit formal timed assessments the lecturer schedules.
 
@@ -12,7 +12,7 @@ and can sit formal timed assessments the lecturer schedules.
 - **Backend:** Node.js + Express
 - **Database:** MongoDB (Atlas recommended for deployment)
 - **Auth:** JWT + bcrypt, role-based (student / lecturer)
-- **AI:** xAI Grok API for question generation from extracted PDF text
+- **AI:** Google Gemini API (free tier) for question generation from extracted PDF text
 - **PDF parsing:** pdf-parse
 
 ## Project structure
@@ -26,7 +26,7 @@ gstprep-ai/
       middleware/    # auth, file upload
       models/        # Mongoose schemas
       routes/        # Express routers
-      services/      # PDF extraction, Grok integration
+      services/      # PDF extraction, Gemini integration
       utils/         # seed script
       app.js
       server.js
@@ -47,7 +47,7 @@ gstprep-ai/
 ### Prerequisites
 - Node.js 18+
 - A MongoDB connection string (local `mongod`, or a free MongoDB Atlas cluster)
-- An xAI (Grok) API key from https://console.x.ai
+- A Google Gemini API key from https://aistudio.google.com/apikey
 
 ### Backend
 
@@ -55,7 +55,7 @@ gstprep-ai/
 cd backend
 npm install
 cp .env.example .env
-# edit .env: set MONGO_URI, JWT_SECRET, XAI_API_KEY
+# edit .env: set MONGO_URI, JWT_SECRET, GEMINI_API_KEY
 npm run seed     # optional: creates a demo lecturer, student, and course
 npm run dev      # starts on http://localhost:5000
 ```
@@ -101,7 +101,7 @@ Open http://localhost:5173. Log in as the lecturer, upload a PDF under a course'
 4. Add environment variables (Render dashboard → Environment):
    - `MONGO_URI` — your Atlas connection string
    - `JWT_SECRET` — any long random string (Render can auto-generate)
-   - `XAI_API_KEY` — your xAI (Grok) API key
+   - `GEMINI_API_KEY` — your Google Gemini API key
    - `CLIENT_URL` — your deployed frontend URL (set after step below, then redeploy)
 5. Deploy. Confirm `https://<your-service>.onrender.com/api/health` returns `{"status":"ok"}`
 
@@ -126,7 +126,7 @@ Node projects; no extra config file is required.
 1. Lecturer uploads a PDF via `POST /api/materials/upload`
 2. The file is saved and `pdf-parse` extracts raw text (`services/pdfService.js`)
 3. Text is cleaned and split into ~3000-character paragraph-aware chunks
-4. Each chunk is sent to Grok with a strict system prompt requiring valid JSON output:
+4. Each chunk is sent to Gemini with a strict system prompt requiring valid JSON output:
    4 options, one correct answer, an explanation, a topic label, difficulty, and Bloom's
    level (`services/aiService.js`)
 5. Responses are validated and de-duplicated, then stored as `Question` documents with
