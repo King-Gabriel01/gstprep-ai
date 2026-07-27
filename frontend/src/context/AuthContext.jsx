@@ -47,6 +47,14 @@ export function AuthProvider({ children }) {
     return res.data.user;
   }, []);
 
+  const googleAuth = useCallback(async (payload) => {
+    const res = await authApi.google(payload);
+    localStorage.setItem('gstprep_token', res.data.token);
+    localStorage.setItem('gstprep_user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+    return res.data.user;
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('gstprep_token');
     localStorage.removeItem('gstprep_user');
@@ -54,7 +62,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );

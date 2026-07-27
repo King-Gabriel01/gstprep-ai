@@ -46,7 +46,7 @@ async function listCourses(req, res) {
 // GET /api/courses/:id
 async function getCourse(req, res) {
   try {
-    const course = await Course.findById(req.params.id).populate('lecturer', 'name email');
+    const course = await Course.findById(req.params.id).populate('lecturer', 'firstName lastName email');
     if (!course) return res.status(404).json({ message: 'Course not found.' });
     res.json({ course });
   } catch (err) {
@@ -58,7 +58,7 @@ async function getCourse(req, res) {
 async function discoverCourses(req, res) {
   try {
     const courses = await Course.find({ isActive: true })
-      .populate('lecturer', 'name')
+      .populate('lecturer', 'firstName lastName')
       .select('title courseCode description lecturer enrolmentCode enrolledStudents')
       .sort({ createdAt: -1 });
     res.json({ courses });

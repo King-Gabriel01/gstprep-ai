@@ -3,7 +3,15 @@ import api from './api';
 export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  google: (data) => api.post('/auth/google', data),
   me: () => api.get('/auth/me'),
+  verifyEmail: (token) => api.get(`/auth/verify-email?token=${encodeURIComponent(token)}`),
+  resendVerification: () => api.post('/auth/resend-verification'),
+};
+
+export const userApi = {
+  updateProfilePicture: (profilePictureUrl) => api.patch('/users/profile-picture', { profilePictureUrl }),
+  updateMe: (data) => api.patch('/users/me', data),
 };
 
 export const courseApi = {

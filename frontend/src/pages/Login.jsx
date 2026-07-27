@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, googleAuth } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -24,6 +25,26 @@ export default function Login() {
       setLoading(false);
     }
   }
+
+  const handleGoogleCredential = useCallback(
+    async (idToken) => {
+      setError('');
+      setLoading(true);
+      try {
+        await googleAuth({ idToken });
+        navigate('/dashboard');
+      } catch (err) {
+        if (err.response?.data?.requiresProfileCompletion) {
+          setError("We couldn't find an account for this Google email. Please sign up first.");
+        } else {
+          setError(err.response?.data?.message || 'Google sign-in failed.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [googleAuth, navigate]
+  );
 
   return (
     <div className="min-h-screen">
@@ -62,7 +83,7 @@ export default function Login() {
             </p>
           )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full">
+          <button type="submit" disabled={loading} className="btn-primary btn-ripple w-full">
             {loading ? (
               <>
                 <Spinner /> Logging in…
@@ -72,6 +93,16 @@ export default function Login() {
             )}
           </button>
         </form>
+
+        <div className="mt-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-ink-border" />
+          <span className="text-xs text-muted font-mono">or</span>
+          <div className="h-px flex-1 bg-ink-border" />
+        </div>
+
+        <div className="mt-6">
+          <GoogleSignInButton onCredential={handleGoogleCredential} text="signin_with" />
+        </div>
 
         <p className="mt-6 text-sm text-muted">
           Don't have an account?{' '}

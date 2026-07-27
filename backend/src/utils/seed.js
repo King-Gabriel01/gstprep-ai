@@ -21,20 +21,28 @@ async function seed() {
   }
 
   const lecturer = await User.create({
-    name: 'Dr. Amaka Chukwu',
+    firstName: 'Amaka',
+    lastName: 'Chukwu',
     email: 'lecturer@gstprep.demo',
     password: 'password123',
     role: 'lecturer',
     department: 'General Studies',
+    gender: 'female',
+    bio: 'Senior Lecturer in the Department of General Studies.',
+    isEmailVerified: true,
   });
 
   const student = await User.create({
-    name: 'Tunde Bakare',
+    firstName: 'Tunde',
+    lastName: 'Bakare',
     email: 'student@gstprep.demo',
     password: 'password123',
     role: 'student',
     matricNumber: 'CSC/2021/045',
     department: 'Computer Science',
+    level: 200,
+    gender: 'male',
+    isEmailVerified: true,
   });
 
   const course = await Course.create({

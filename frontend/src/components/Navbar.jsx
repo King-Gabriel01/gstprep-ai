@@ -24,7 +24,7 @@ export default function Navbar() {
         {user ? (
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline text-sm text-muted font-mono">
-              {user.name.split(' ')[0]} · {user.role}
+              {user.firstName} · {user.role}
             </span>
             <button onClick={handleLogout} className="btn-secondary !py-2 !px-4 text-xs">
               Log out

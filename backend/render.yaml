@@ -20,10 +20,18 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        value: gemini-2.0-flash
+        value: gemini-3.5-flash-lite
       - key: GEMINI_BASE_URL
         value: https://generativelanguage.googleapis.com/v1beta
       - key: CLIENT_URL
         sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "GSTPrep AI <onboarding@resend.dev>"
       - key: MAX_UPLOAD_MB
         value: 15

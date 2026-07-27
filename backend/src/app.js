@@ -11,6 +11,7 @@ const questionRoutes = require('./routes/questionRoutes');
 const practiceRoutes = require('./routes/practiceRoutes');
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/practice', practiceRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/users', userRoutes);
 
 // --- 404 handler ---
 app.use('/api', (req, res) => {

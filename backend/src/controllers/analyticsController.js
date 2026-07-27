@@ -69,7 +69,7 @@ async function getLecturerAnalytics(req, res) {
   try {
     const { courseId } = req.params;
 
-    const course = await Course.findById(courseId).populate('enrolledStudents', 'name email');
+    const course = await Course.findById(courseId).populate('enrolledStudents', 'firstName lastName email');
     if (!course) return res.status(404).json({ message: 'Course not found.' });
     if (!course.lecturer.equals(req.user._id)) {
       return res.status(403).json({ message: 'You do not have access to this course analytics.' });
@@ -119,7 +119,7 @@ async function getLecturerAnalytics(req, res) {
     const activeStudentIds = new Set(results.map((r) => r.student.toString()));
     const studentActivity = course.enrolledStudents.map((s) => ({
       studentId: s._id,
-      name: s.name,
+      name: `${s.firstName} ${s.lastName}`,
       email: s.email,
       hasActivity: activeStudentIds.has(s._id.toString()),
     }));
