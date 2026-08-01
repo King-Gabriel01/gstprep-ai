@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import VerifyEmailBanner from './VerifyEmailBanner';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -11,7 +12,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-border bg-ink/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-ink-border">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2 group">
           <span className="font-display text-xl font-semibold tracking-tight text-paper">
@@ -41,6 +42,7 @@ export default function Navbar() {
           </div>
         )}
       </div>
+      <VerifyEmailBanner />
     </header>
   );
 }

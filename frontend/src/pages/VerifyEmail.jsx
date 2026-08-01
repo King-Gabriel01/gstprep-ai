@@ -3,10 +3,12 @@ import { useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Spinner } from '../components/Spinner';
 import { authApi } from '../services/resources';
+import { useAuth } from '../context/AuthContext';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { user, refreshUser } = useAuth();
   const [status, setStatus] = useState('verifying'); // verifying | success | error
   const [message, setMessage] = useState('');
 
@@ -20,12 +22,15 @@ export default function VerifyEmail() {
       .verifyEmail(token)
       .then(() => {
         setStatus('success');
+        // If verifying in the same browser session that's logged in, refresh
+        // the cached user so the reminder banner disappears immediately.
+        refreshUser();
       })
       .catch((err) => {
         setStatus('error');
         setMessage(err.response?.data?.message || 'Verification failed.');
       });
-  }, [token]);
+  }, [token, refreshUser]);
 
   return (
     <div className="min-h-screen">
@@ -47,8 +52,8 @@ export default function VerifyEmail() {
             </div>
             <h1 className="mt-4 font-display text-2xl font-semibold text-paper">Email verified</h1>
             <p className="mt-2 text-muted text-sm">Your account is now fully active.</p>
-            <Link to="/login" className="btn-primary btn-ripple mt-6 inline-flex">
-              Log in
+            <Link to={user ? '/dashboard' : '/login'} className="btn-primary btn-ripple mt-6 inline-flex">
+              {user ? 'Go to dashboard' : 'Log in'}
             </Link>
           </>
         )}

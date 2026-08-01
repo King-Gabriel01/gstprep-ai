@@ -61,8 +61,21 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem('gstprep_token');
+    if (!token) return null;
+    try {
+      const res = await authApi.me();
+      setUser(res.data.user);
+      localStorage.setItem('gstprep_user', JSON.stringify(res.data.user));
+      return res.data.user;
+    } catch {
+      return null;
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, googleAuth, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleAuth, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
