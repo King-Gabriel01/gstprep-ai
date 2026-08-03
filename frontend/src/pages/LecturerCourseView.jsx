@@ -120,34 +120,7 @@ function MaterialsTab({ courseId }) {
             className="input-field !py-2 file:mr-3 file:rounded-full file:border-0 file:bg-moss-500/15 file:text-moss-300 file:px-3 file:py-1.5 file:text-xs file:font-medium file:cursor-pointer hover:file:bg-moss-500/25 file:transition-colors"
           />
         </div>
-        <div>
-              <label className="label">Available until</label>
-              <input
-                type="datetime-local"
-                required
-                className="input-field"
-                value={form.availableUntil}
-                onChange={(e) => setForm({ ...form, availableUntil: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <label className="flex items-start gap-3 cursor-pointer card !py-3 !bg-clay/5 !border-clay/20">
-            <input
-              type="checkbox"
-              checked={form.isLiveProctored}
-              onChange={(e) => setForm({ ...form, isLiveProctored: e.target.checked })}
-              className="mt-0.5 accent-clay"
-            />
-            <span>
-              <span className="block text-sm font-medium text-paper">Enable live proctoring</span>
-              <span className="block text-xs text-paper/55 mt-0.5">
-                Requires camera access. Detects tab-switching, face absence, multiple faces, and copy/paste, and produces an integrity score visible alongside the result.
-              </span>
-            </span>
-          </label>
-
-          {error && (
+        {error && (
           <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
             {error}
           </p>
@@ -519,6 +492,22 @@ const [form, setForm] = useState({
               />
             </div>
           </div>
+
+          <label className="flex items-start gap-3 cursor-pointer card !py-3 !bg-clay/5 !border-clay/20">
+            <input
+              type="checkbox"
+              checked={form.isLiveProctored}
+              onChange={(e) => setForm({ ...form, isLiveProctored: e.target.checked })}
+              className="mt-0.5 accent-clay"
+            />
+            <span>
+              <span className="block text-sm font-medium text-paper">Enable live proctoring</span>
+              <span className="block text-xs text-paper/55 mt-0.5">
+                Requires camera access. Detects tab-switching, face absence, multiple faces, and copy/paste, and produces an integrity score visible alongside the result.
+              </span>
+            </span>
+          </label>
+
           {error && (
             <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
               {error}
