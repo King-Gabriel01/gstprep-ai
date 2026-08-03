@@ -7,7 +7,7 @@ const Result = require('../models/Result');
 // POST /api/assessments  (lecturer)
 async function createAssessment(req, res) {
   try {
-    const { title, courseId, durationMinutes, numberOfQuestions, availableFrom, availableUntil } =
+    const { title, courseId, durationMinutes, numberOfQuestions, availableFrom, availableUntil, isLiveProctored } =
       req.body;
 
     if (!title || !courseId || !numberOfQuestions || !availableFrom || !availableUntil) {
@@ -43,6 +43,7 @@ async function createAssessment(req, res) {
       availableFrom,
       availableUntil,
       isPublished: false,
+      isLiveProctored: Boolean(isLiveProctored),
     });
 
     res.status(201).json({ assessment });

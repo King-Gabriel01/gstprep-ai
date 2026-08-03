@@ -121,15 +121,33 @@ function MaterialsTab({ courseId }) {
           />
         </div>
         <div>
-          <label className="label">Label (optional)</label>
-          <input
-            className="input-field"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Week 3 - Comprehension Skills"
-          />
-        </div>
-        {error && (
+              <label className="label">Available until</label>
+              <input
+                type="datetime-local"
+                required
+                className="input-field"
+                value={form.availableUntil}
+                onChange={(e) => setForm({ ...form, availableUntil: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer card !py-3 !bg-clay/5 !border-clay/20">
+            <input
+              type="checkbox"
+              checked={form.isLiveProctored}
+              onChange={(e) => setForm({ ...form, isLiveProctored: e.target.checked })}
+              className="mt-0.5 accent-clay"
+            />
+            <span>
+              <span className="block text-sm font-medium text-paper">Enable live proctoring</span>
+              <span className="block text-xs text-paper/55 mt-0.5">
+                Requires camera access. Detects tab-switching, face absence, multiple faces, and copy/paste, and produces an integrity score visible alongside the result.
+              </span>
+            </span>
+          </label>
+
+          {error && (
           <p className="text-sm text-clay bg-clay/10 border border-clay/20 rounded-lg px-3 py-2 animate-fade-in">
             {error}
           </p>
@@ -397,12 +415,13 @@ function QuestionsTab({ courseId }) {
 function AssessmentsTab({ courseId }) {
   const [assessments, setAssessments] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
+const [form, setForm] = useState({
     title: '',
     numberOfQuestions: 10,
     durationMinutes: 30,
     availableFrom: '',
     availableUntil: '',
+    isLiveProctored: false,
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -422,7 +441,7 @@ function AssessmentsTab({ courseId }) {
     try {
       await assessmentApi.create({ ...form, courseId });
       setShowForm(false);
-      setForm({ title: '', numberOfQuestions: 10, durationMinutes: 30, availableFrom: '', availableUntil: '' });
+      setForm({ title: '', numberOfQuestions: 10, durationMinutes: 30, availableFrom: '', availableUntil: '', isLiveProctored: false });
       load();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create assessment.');

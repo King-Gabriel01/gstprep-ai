@@ -44,6 +44,10 @@ const assessmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isLiveProctored: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

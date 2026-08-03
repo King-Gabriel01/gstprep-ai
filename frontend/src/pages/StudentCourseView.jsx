@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { courseApi, practiceApi, assessmentApi, analyticsApi } from '../services/resources';
 import ScoreBadge from '../components/ScoreBadge';
 import PracticeSession from '../components/PracticeSession';
+import LiveExamSession from '../components/LiveExamSession';
 import { Spinner, LoadingScreen } from '../components/Spinner';
 
 const TABS = ['Practice', 'Assessments', 'My progress'];
@@ -157,22 +158,38 @@ function PracticeTab({ courseId }) {
 function AssessmentsTab({ courseId }) {
   const [assessments, setAssessments] = useState([]);
   const [session, setSession] = useState(null);
-  const [activeAssessmentId, setActiveAssessmentId] = useState(null);
+  const [activeAssessment, setActiveAssessment] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     assessmentApi.listForCourse(courseId).then((res) => setAssessments(res.data.assessments));
   }, [courseId]);
 
-  async function handleTake(id) {
+  async function handleTake(assessment) {
     setError('');
+    if (assessment.isLiveProctored) {
+      setActiveAssessment(assessment);
+      return;
+    }
     try {
-      const res = await assessmentApi.take(id);
+      const res = await assessmentApi.take(assessment._id);
       setSession(res.data);
-      setActiveAssessmentId(id);
+      setActiveAssessment(assessment);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not start this assessment.');
     }
+  }
+
+  if (activeAssessment?.isLiveProctored) {
+    return (
+      <LiveExamSession
+        assessmentId={activeAssessment._id}
+        onFinish={() => {
+          setActiveAssessment(null);
+          assessmentApi.listForCourse(courseId).then((res) => setAssessments(res.data.assessments));
+        }}
+      />
+    );
   }
 
   if (session) {
@@ -181,10 +198,10 @@ function AssessmentsTab({ courseId }) {
         session={session}
         courseId={courseId}
         mode="formal"
-        assessmentId={activeAssessmentId}
+        assessmentId={activeAssessment._id}
         onFinish={() => {
           setSession(null);
-          setActiveAssessmentId(null);
+          setActiveAssessment(null);
         }}
       />
     );
