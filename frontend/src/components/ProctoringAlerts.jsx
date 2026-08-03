@@ -1,7 +1,7 @@
 /**
- * Renders the transient soft-violation warning toast and the hard 15%%
- * critical alert modal. The modal is dismissible (per the chosen UX), not
- * a blocking gate, so the student can choose to continue or submit.
+ * Renders the transient soft-violation warning toast and the hard 15% critical
+ * alert modal. The modal is dismissible (per the chosen UX), not a blocking
+ * gate, so the student can choose to continue or submit.
  */
 export function WarningToast({ warning }) {
   if (!warning) return null;
