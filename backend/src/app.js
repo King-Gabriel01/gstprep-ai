@@ -16,6 +16,10 @@ const examSessionRoutes = require('./routes/examSessionRoutes');
 
 const app = express();
 
+// Render sits behind a reverse proxy; trust its X-Forwarded-For header so
+// express-rate-limit can correctly identify unique clients.
+app.set('trust proxy', 1);
+
 // --- Security & core middleware ---
 app.use(helmet());
 app.use(
