@@ -60,3 +60,11 @@ export const analyticsApi = {
     api.get(`/analytics/student/${courseId}`, { params: studentId ? { studentId } : {} }),
   lecturer: (courseId) => api.get(`/analytics/lecturer/${courseId}`),
 };
+
+export const examSessionApi = {
+  start: (assessmentId) => api.post('/exam-sessions/start', { assessmentId }),
+  passEnvironmentCheck: (examSessionId) => api.patch(`/exam-sessions/${examSessionId}/pass-environment-check`),
+  submit: (examSessionId, data) => api.post(`/exam-sessions/${examSessionId}/submit`, data),
+  get: (examSessionId) => api.get(`/exam-sessions/${examSessionId}`),
+  listLiveForAssessment: (assessmentId) => api.get(`/exam-sessions/assessment/${assessmentId}/live`),
+};
