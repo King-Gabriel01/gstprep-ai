@@ -237,7 +237,7 @@ function AssessmentsTab({ courseId }) {
                   </p>
                 </div>
                 <button
-                  onClick={() => handleTake(a._id)}
+                  onClick={() => handleTake(a)}
                   disabled={!open}
                   className="btn-primary !py-1.5 !px-4 text-xs shrink-0"
                 >
