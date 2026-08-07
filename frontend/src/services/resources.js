@@ -50,6 +50,7 @@ export const practiceApi = {
 export const assessmentApi = {
   create: (data) => api.post('/assessments', data),
   publish: (id) => api.patch(`/assessments/${id}/publish`),
+  unpublish: (id) => api.patch(`/assessments/${id}/unpublish`),
   listForCourse: (courseId) => api.get(`/assessments/course/${courseId}`),
   take: (id) => api.get(`/assessments/${id}/take`),
   submit: (id, data) => api.post(`/assessments/${id}/submit`, data),

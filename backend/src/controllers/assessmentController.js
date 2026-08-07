@@ -71,6 +71,25 @@ async function publishAssessment(req, res) {
   }
 }
 
+// PATCH /api/assessments/:id/unpublish  (lecturer)
+async function unpublishAssessment(req, res) {
+  try {
+    const assessment = await Assessment.findById(req.params.id);
+    if (!assessment) return res.status(404).json({ message: 'Assessment not found.' });
+
+    const course = await Course.findById(assessment.course);
+    if (!course.lecturer.equals(req.user._id)) {
+      return res.status(403).json({ message: 'You do not own this assessment.' });
+    }
+
+    assessment.isPublished = false;
+    await assessment.save();
+    res.json({ assessment });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to unpublish assessment.', error: err.message });
+  }
+}
+
 // GET /api/assessments/course/:courseId
 async function listAssessmentsForCourse(req, res) {
   try {
@@ -191,6 +210,7 @@ async function submitAssessment(req, res) {
 module.exports = {
   createAssessment,
   publishAssessment,
+  unpublishAssessment,
   listAssessmentsForCourse,
   takeAssessment,
   submitAssessment,

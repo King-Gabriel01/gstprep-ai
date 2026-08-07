@@ -423,8 +423,14 @@ const [form, setForm] = useState({
     }
   }
 
-  async function handlePublish(id) {
+async function handlePublish(id) {
     await assessmentApi.publish(id);
+    load();
+  }
+
+  async function handleUnpublish(id) {
+    if (!confirm('Unpublish this assessment? Students will no longer be able to take it until you publish it again.')) return;
+    await assessmentApi.unpublish(id);
     load();
   }
 
@@ -544,7 +550,12 @@ const [form, setForm] = useState({
               </p>
             </div>
             {a.isPublished ? (
-              <span className="pill bg-moss-500/10 text-moss-400 border border-moss-500/25 shrink-0">Published</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="pill bg-moss-500/10 text-moss-400 border border-moss-500/25">Published</span>
+                <button onClick={() => handleUnpublish(a._id)} className="btn-secondary !py-1.5 !px-3 text-xs">
+                  Unpublish
+                </button>
+              </div>
             ) : (
               <button onClick={() => handlePublish(a._id)} className="btn-secondary !py-1.5 !px-4 text-xs shrink-0">
                 Publish
